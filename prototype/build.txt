@@ -1,0 +1,4 @@
+compile program - $javac TCPServer.java 
+Run server - $java TCPServer 
+
+
