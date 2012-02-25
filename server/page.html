@@ -1,0 +1,63 @@
+<html>
+<head><title> Collaborative Document Editing</title> </head>
+<body>
+	<h1 style="text-align:center;"> Shared Document 1</h1>
+	<div style="margin-left:200px;">
+		<textarea id="mainDoc" style="width:900px;height:400px;"></textarea>
+		<div style="margin-top:20px;">
+			<span>
+				Key pressed : <span id="textReplace"> </span>  ... &nbsp; &nbsp;Location :
+			</span>
+			<span id="location"></span>
+		<div>
+		<div id="pushkar"> AAA </div>
+	<script type="text/javascript">
+	alert("comin here r");
+var mainDoc = document.getElementById("mainDoc");
+function setUpPersistantConnection(){
+	xmlhttp=new XMLHttpRequest();
+	xmlhttp.onreadystatechange=function(){
+	
+		if(xmlhttp.status==200) {
+			document.getElementById("pushkar").innerHTML=xmlhttp.responseText;
+		}
+	}
+	xmlhttp.open("GET","http://localhost:5000",true);
+	xmlhttp.send();
+} 
+
+function returnKeyFromCode(code){
+	 if(code == 8)
+	 	var charPressed = "Backspace";
+	 else if(code == 32)
+	 	var charPressed = "Spacebar";
+	 else if(code == 0)
+	 	var charPressed = "delete";
+	 else 
+	 	var charPressed = String.fromCharCode(code);
+	return charPressed;
+}
+
+function keyPress(e){
+	 var textReplace = document.getElementById("textReplace");
+	 //textReplace.innerHTML = e.which;
+	 textReplace.innerHTML = returnKeyFromCode(e.which)  ;
+	 var locationReplace = document.getElementById("location");
+	 locationReplace.innerHTML = mainDoc.selectionStart;
+}
+
+function setEventHandlers(){
+	mainDoc.onkeypress = function(e){keyPress(e);}
+}
+
+function main(){
+	setUpPersistantConnection();
+	setEventHandlers();
+}
+main();
+	
+	</script>
+	</div>
+
+</body>
+</html>
