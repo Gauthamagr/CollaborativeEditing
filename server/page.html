@@ -5,6 +5,7 @@
 	<div style="margin-left:200px;">
 		<textarea id="mainDoc" style="width:900px;height:400px;"></textarea>
 		<div style="margin-top:20px;">
+			<button id="connectToServer"  style="display:block;" value="connect" >Connect</button>
 			<span>
 				Key pressed : <span id="textReplace"> </span>  ... &nbsp; &nbsp;Location :
 			</span>
@@ -12,22 +13,18 @@
 		<div>
 		<div id="pushkar"> AAA </div>
 	<script type="text/javascript">
-	alert("comin here r");
 var mainDoc = document.getElementById("mainDoc");
-function setUpPersistantConnection(){
+function setUpPersistantConnection(e){
 	xmlhttp=new XMLHttpRequest();
 	xmlhttp.onreadystatechange=function(){
-	
-		if(xmlhttp.status==200) {
-			document.getElementById("pushkar").innerHTML=xmlhttp.responseText;
-		}
-	}
+		if(xmlhttp.status==200){document.getElementById("pushkar").innerHTML=xmlhttp.responseText;}
+	};
 	xmlhttp.open("GET","http://localhost:5000",true);
 	xmlhttp.send();
-} 
+};
 
 function returnKeyFromCode(code){
-	 if(code == 8)
+ if(code == 8)
 	 	var charPressed = "Backspace";
 	 else if(code == 32)
 	 	var charPressed = "Spacebar";
@@ -36,7 +33,7 @@ function returnKeyFromCode(code){
 	 else 
 	 	var charPressed = String.fromCharCode(code);
 	return charPressed;
-}
+};
 
 function keyPress(e){
 	 var textReplace = document.getElementById("textReplace");
@@ -44,19 +41,18 @@ function keyPress(e){
 	 textReplace.innerHTML = returnKeyFromCode(e.which)  ;
 	 var locationReplace = document.getElementById("location");
 	 locationReplace.innerHTML = mainDoc.selectionStart;
-}
-
+};
 function setEventHandlers(){
 	mainDoc.onkeypress = function(e){keyPress(e);}
-}
+	var connectButton=document.getElementById("connectToServer");
+	connectButton.onclick=function(e){setUpPersistantConnection(e);}
+};
 
 function main(){
-	setUpPersistantConnection();
-	setEventHandlers();
+	setEventHandlers();	
 }
 main();
-	
-	</script>
+</script>
 	</div>
 
 </body>
