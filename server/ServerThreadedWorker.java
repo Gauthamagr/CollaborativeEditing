@@ -7,6 +7,25 @@ public class ServerThreadedWorker implements  Runnable{
     protected String serverText   = null;
     protected PrintWriter outputChannel  = null;
  	static int shared_var;
+	protected String thread_type;
+	protected InputStream input_stream;
+
+
+	public ServerThreadedWorker(Socket clientSocket , String serverText){
+		this.clientSocket = clientSocket;
+		this.thread_type = serverText;
+		try{
+			//Set up the input & output channels
+			outputChannel = new PrintWriter(clientSocket.getOutputStream(),true);
+			input_stream= clientSocket.getInputStream();
+		}catch(IOException e){
+			System.out.println("Could not capture the imput/output stream ");
+		}
+	}
+
+	public ServerThreadedWorker( String serverText){
+		this.serverText = serverText;
+	}
 
 	synchronized void increment(){
 		shared_var++;
@@ -15,32 +34,29 @@ public class ServerThreadedWorker implements  Runnable{
 			return shared_var;
 	}
 
-	public ServerThreadedWorker(Socket clientSocket , String serverText){
-		this.clientSocket = clientSocket;
-		this.serverText = serverText;
-		try{
-		outputChannel = new PrintWriter(clientSocket.getOutputStream(),true);
-		}catch(IOException e){
-			System.out.println("Could not capture the output stream ");
-		}
-	}
-
-	public ServerThreadedWorker( String serverText){
-		this.serverText = serverText;
-	}
-
-	public void run(){
+	public void runPersistentConnectionThread(){
 		int counter =0;
+		while(true){
+			increment();
+			//System.out.println("Thread details : " + Thread.currentThread() + " , shared : " + getSharedVar() );
+			try{
+				String content = "AA"+counter;
+				counter++;
+ 				outputChannel.println(content);
+				Thread.currentThread().sleep(4000);
+			}catch(InterruptedException e){
+			}
+		}
+
+	}
+
+	void runKeyPressThread(){
 		try{
-			//DataInputStream ireader = new DataInputStream( clientSocket.getInputStream() );
-			//System.out.println("Num of chars available : " + ireader.read() );
-			InputStream ireader= clientSocket.getInputStream();
-			System.out.println("Str reade : ");
-			System.out.println("Num of chars available : " + ireader.available() );
-			int num_of_chars = ireader.available();
+			System.out.println("Num of chars available : " + input_stream.available() );
+			int num_of_chars = input_stream.available();
 			char input_char_seq[] = new char[num_of_chars];
-			for(int i =0;i<ireader.available() ; i++){
-				input_char_seq[i] = (char) ireader.read();
+			for(int i =0;i<input_stream.available() ; i++){
+				input_char_seq[i] = (char) input_stream.read();
 			}
 			String client_string = new String(input_char_seq);
 			System.out.println( "str : " + client_string );
@@ -52,22 +68,17 @@ public class ServerThreadedWorker implements  Runnable{
 			for(int i=0;i<q_params.length; i++)
 				System.out.println("q : " + q_params[i]  );
 
-
-			//for(int i =0;i<
 		}catch(IOException e){
 			
 		}
-		while(true){
-			increment();
-			System.out.println("Thread details : " + Thread.currentThread() + " , shared : " + getSharedVar() );
-			try{
-				//String header="HTTP/1.1: 200 OK\r\n"+"Content-Type: text/html\r\n" + "\r\n";
-				String content = "AA"+counter;
-				counter++;
- 				outputChannel.println(content);
-				Thread.currentThread().sleep(4000);
-			}catch(InterruptedException e){
-			}
-		}
+		
+	}
+
+	public void run(){
+		if(this.thread_type == "Persistent" )
+			runPersistentConnectionThread();
+		else if(this.thread_type == "Key")
+			runKeyPressThread();
+		
 	}
 }

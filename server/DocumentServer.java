@@ -6,6 +6,7 @@ public class DocumentServer {
 
 	int number_of_clients;
 	final int SERVER_PORT=5000;
+    ServerSocket Server = null;
 
 	//This is required to send the entire Html
 	public void establishInitialConnection() throws FileNotFoundException , IOException{
@@ -48,7 +49,6 @@ public class DocumentServer {
 	}
 
 	public void establishPersistentConnection() throws  FileNotFoundException , IOException {
-        ServerSocket Server = null;
 		try{
         	Server = new ServerSocket (SERVER_PORT);
 			Server.setReuseAddress(true);
@@ -56,22 +56,45 @@ public class DocumentServer {
 			System.out.println("Exception in establishPersistentConnection(). Cause : " + e.toString() );
 			return;
 		}
-		for(int i =0;i<this.number_of_clients + 3 ;i++){
+
+		//!!!!!!!!!!! REMOVE -1 !!!!!!!!!!!!
+		for(int i =0;i<this.number_of_clients - 1 ;i++){
 			System.out.println(" Waiting for incoming Persistent conenctions num : " + i);
 			Socket clientSocket = null;
 			try{
         		clientSocket = Server.accept();
-				System.out.println("Socket port : " + clientSocket.getPort() );
+			}catch(Exception e){
+				System.out.println("Cannot accept connections . Cause : "+ e.toString());
+			}
+			System.out.println("Connect button clicked ");
+
+       		new Thread( new ServerThreadedWorker(clientSocket, "Persistent")).start();
+			//System.out.println("Started new thread for worker ...  ! ");
+	   }
+
+	}
+
+	public void processKeyPress() throws   IOException {
+		/*
+		try{
+        	Server = new ServerSocket (SERVER_PORT);
+			Server.setReuseAddress(true);
+		}catch(BindException e){
+			System.out.println("Exception in processKeyPress(). Cause : " + e.toString() );
+			return;
+		}
+		*/
+		while(true){
+			System.out.println(" Waiting for incoming key press Msgs ");
+			Socket clientSocket = null;
+			try{
+        		clientSocket = Server.accept();
 			}catch(Exception e){
 				System.out.println("Cannot accept connections . Cause : "+ e.toString());
 			}
 
-			System.out.println("Connect button clicked ");
-			//String persistent_header="HTTP/1.1: 200 OK\r\n"+"Content-Type: text/html\r\n" + "Connection:Keep-Alive\r\n" + "\r\n";
-
-       		new Thread( new ServerThreadedWorker(clientSocket, "Persistent")).start();
-       		//new Thread( new ServerThreadedWorker("Persistent")).start();
-			System.out.println("Started new thread for worker ...  ! ");
+			System.out.println("Key pressed. Spawning new thread");
+       		new Thread( new ServerThreadedWorker(clientSocket, "Key")).start();
 	   }
 
 	}
@@ -101,7 +124,15 @@ public class DocumentServer {
 			System.out.println("Could not establish persistent connection. IOException");
 		}	
 
-		System.out.println("Set up all connections !! \n\n\n");
+		System.out.println("Set up all connections !! \nNow setting up Handler for key press msgs");
+	
+		try{
+			processKeyPress();
+		}catch(FileNotFoundException e){
+			System.out.println("Could not establish persistent connection. FileNotFoundException");
+		}catch(IOException e){
+			System.out.println("Could not establish persistent connection. IOException");
+		}	
 	}
 
 	public DocumentServer(int number_of_clients){

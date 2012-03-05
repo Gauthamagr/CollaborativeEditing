@@ -13,7 +13,9 @@
 		<div>
 		<div id="demoText"> AAA </div>
 	<script type="text/javascript">
+
 var mainDoc = document.getElementById("mainDoc");
+
 function setUpPersistantConnection(e){
 	xmlhttp=new XMLHttpRequest();
 	xmlhttp.onreadystatechange=function(){
@@ -21,7 +23,7 @@ function setUpPersistantConnection(e){
 		//alert("Inner html : " + xmlhttp.responseText );
 		xmlhttp.responseText = "";
 	};
-	xmlhttp.open("POST","http://localhost:5000?key=100&pos=12&revno=1&param=EOS",true);
+	xmlhttp.open("POST","http://localhost:5000",true);
 	xmlhttp.send("STUFF POSTED");
 };
 
@@ -38,11 +40,16 @@ function returnKeyFromCode(code){
 };
 
 function keyPress(e){
-	 var textReplace = document.getElementById("textReplace");
-	 //textReplace.innerHTML = e.which;
-	 textReplace.innerHTML = returnKeyFromCode(e.which)  ;
-	 var locationReplace = document.getElementById("location");
-	 locationReplace.innerHTML = mainDoc.selectionStart;
+	var textReplace = document.getElementById("textReplace");
+	var keyPressed = returnKeyFromCode(e.which)  ;
+	textReplace.innerHTML = keyPressed;
+	var locationReplace = document.getElementById("location");
+	locationReplace.innerHTML = mainDoc.selectionStart;
+
+	alert("key pressed ");
+	xmlhttp=new XMLHttpRequest();
+	xmlhttp.open("POST","http://localhost:5000?key=" + keyPressed + "&pos=" +mainDoc.selectionStart +"&revno=1&param=EOS",true);
+	alert("sent req !! ");
 };
 function setEventHandlers(){
 	mainDoc.onkeypress = function(e){keyPress(e);}
