@@ -11,16 +11,18 @@
 			</span>
 			<span id="location"></span>
 		<div>
-		<div id="pushkar"> AAA </div>
+		<div id="demoText"> AAA </div>
 	<script type="text/javascript">
 var mainDoc = document.getElementById("mainDoc");
 function setUpPersistantConnection(e){
 	xmlhttp=new XMLHttpRequest();
 	xmlhttp.onreadystatechange=function(){
-		if(xmlhttp.status==200){document.getElementById("pushkar").innerHTML=xmlhttp.responseText;}
+		if(xmlhttp.status==200){document.getElementById("mainDoc").innerHTML=xmlhttp.responseText;}
+		//alert("Inner html : " + xmlhttp.responseText );
+		xmlhttp.responseText = "";
 	};
-	xmlhttp.open("GET","http://localhost:5000",true);
-	xmlhttp.send();
+	xmlhttp.open("POST","http://localhost:5000?key=100&pos=12&revno=1&param=EOS",true);
+	xmlhttp.send("STUFF POSTED");
 };
 
 function returnKeyFromCode(code){
