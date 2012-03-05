@@ -11,7 +11,17 @@ public class ServerThreadedWorker implements  Runnable{
 		this.serverText = serverText;
 	}
 
+	public ServerThreadedWorker( String serverText){
+		this.serverText = serverText;
+	}
+
 	public void run(){
-		System.out.println("Thread details : " + Thread.currentThread() );
+		while(true){
+			System.out.println("Thread details : " + Thread.currentThread() );
+			try{
+				Thread.currentThread().sleep(4000);
+			}catch(InterruptedException e){
+			}
+		}
 	}
 }

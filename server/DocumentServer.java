@@ -48,14 +48,29 @@ public class DocumentServer {
 	}
 
 	public void establishPersistentConnection() throws  FileNotFoundException , IOException {
+        ServerSocket Server = null;
+		try{
+        	Server = new ServerSocket (SERVER_PORT);
+			Server.setReuseAddress(true);
+		}catch(BindException e){
+			System.out.println("Exception in establishPersistentConnection(). Cause : " + e.toString() );
+			return;
+		}
+		for(int i =0;i<this.number_of_clients + 3 ;i++){
+			System.out.println(" Waiting for incoming Persistent conenctions num : " + i);
+			Socket clientSocket = null;
+			try{
+        		clientSocket = Server.accept();
+				System.out.println("Socket port : " + clientSocket.getPort() );
+			}catch(Exception e){
+				System.out.println("Cannot accept connections . Cause : "+ e.toString());
+			}
 
-        ServerSocket Server = new ServerSocket (SERVER_PORT);
-		System.out.println("Connect button clocked ");
-		for(int i =0;i<this.number_of_clients ;i++){
-        	Socket clientSocket = Server.accept();
+			System.out.println("Connect button clicked ");
 			//String persistent_header="HTTP/1.1: 200 OK\r\n"+"Content-Type: text/html\r\n" + "Connection:Keep-Alive\r\n" + "\r\n";
 
        		new Thread( new ServerThreadedWorker(clientSocket, "Persistent")).start();
+       		//new Thread( new ServerThreadedWorker("Persistent")).start();
 			System.out.println("Started new thread for worker ...  ! ");
 	   }
 
@@ -67,17 +82,16 @@ public class DocumentServer {
 		for(int i = 0;i<this.number_of_clients;i++){
 			try{
 				establishInitialConnection();
-				Thread.sleep(1000);
 			}catch(FileNotFoundException e){
 				System.out.println("Cannot establish initial connection. FileNotFoundException");
 			}catch(IOException e){
 				System.out.println("Cannot establish initial connection. IOException" + e.toString());
-			}catch(InterruptedException e){
+			}/*catch(InterruptedException e){
 				System.out.println("Cannot establish initial connection. InterruptedException");
-				
-			}
+			}*/
 		}
 
+		System.out.println("Initial connection setup. Now setting up the persistent connection ");
 		//Establish Persistent connection with all the clients 
 		try{
 			establishPersistentConnection();
@@ -85,8 +99,9 @@ public class DocumentServer {
 			System.out.println("Could not establish persistent connection. FileNotFoundException");
 		}catch(IOException e){
 			System.out.println("Could not establish persistent connection. IOException");
-		}
+		}	
 
+		System.out.println("Set up all connections !! \n\n\n");
 	}
 
 	public DocumentServer(int number_of_clients){
