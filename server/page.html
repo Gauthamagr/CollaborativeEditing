@@ -19,7 +19,7 @@ var mainDoc = document.getElementById("mainDoc");
 function setUpPersistantConnection(e){
 	xmlhttp=new XMLHttpRequest();
 	xmlhttp.onreadystatechange=function(){
-		if(xmlhttp.status==200){document.getElementById("mainDoc").innerHTML=xmlhttp.responseText;}
+		if(xmlhttp.status==200){document.getElementById("demoText").innerHTML=xmlhttp.responseText;}
 		//alert("Inner html : " + xmlhttp.responseText );
 		xmlhttp.responseText = "";
 	};
@@ -28,7 +28,7 @@ function setUpPersistantConnection(e){
 };
 
 function returnKeyFromCode(code){
- if(code == 8)
+ 	if(code == 8)
 	 	var charPressed = "Backspace";
 	 else if(code == 32)
 	 	var charPressed = "Spacebar";
@@ -46,11 +46,15 @@ function keyPress(e){
 	var locationReplace = document.getElementById("location");
 	locationReplace.innerHTML = mainDoc.selectionStart;
 
-	alert("key pressed ");
 	xmlhttp=new XMLHttpRequest();
+	xmlhttp.onreadystatechange=function(){
+		if(xmlhttp.status==200){
+		}
+	};
 	xmlhttp.open("POST","http://localhost:5000?key=" + keyPressed + "&pos=" +mainDoc.selectionStart +"&revno=1&param=EOS",true);
-	alert("sent req !! ");
+	xmlhttp.send("STUFF POSTED");
 };
+
 function setEventHandlers(){
 	mainDoc.onkeypress = function(e){keyPress(e);}
 	var connectButton=document.getElementById("connectToServer");

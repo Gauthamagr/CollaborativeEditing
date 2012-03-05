@@ -6,9 +6,10 @@ public class ServerThreadedWorker implements  Runnable{
     protected Socket clientSocket = null;
     protected String serverText   = null;
     protected PrintWriter outputChannel  = null;
- 	static int shared_var;
+ 	static char char_typed;
 	protected String thread_type;
 	protected InputStream input_stream;
+	static int semaphore=0;
 
 
 	public ServerThreadedWorker(Socket clientSocket , String serverText){
@@ -27,25 +28,34 @@ public class ServerThreadedWorker implements  Runnable{
 		this.serverText = serverText;
 	}
 
+	synchronized void setChar(char char_typed){
+		this.char_typed = char_typed;
+		this.semaphore++;
+	}
+	synchronized int getCharTyped(){
+			this.semaphore--;
+			return char_typed;
+	}
 	synchronized void increment(){
-		shared_var++;
+		this.semaphore++;
 	}
-	synchronized int getSharedVar(){
-			return shared_var;
+	synchronized int getSemaphore(){
+		return this.semaphore;
 	}
+
 
 	public void runPersistentConnectionThread(){
 		int counter =0;
 		while(true){
-			increment();
 			//System.out.println("Thread details : " + Thread.currentThread() + " , shared : " + getSharedVar() );
-			try{
-				String content = "AA"+counter;
-				counter++;
- 				outputChannel.println(content);
-				Thread.currentThread().sleep(4000);
-			}catch(InterruptedException e){
-			}
+			//try{
+				if(getSemaphore()>0){
+					char typed = (char )getCharTyped();
+					System.out.println("CHAR SENT !");
+ 					outputChannel.println(typed);
+				}
+			//}catch(InterruptedException e){
+			//}
 		}
 
 	}
@@ -63,15 +73,25 @@ public class ServerThreadedWorker implements  Runnable{
 			
 			int position_of_question =client_string.indexOf( '?' ,  client_string.indexOf("POST") );
 			String query_params = client_string.substring(position_of_question + 1 , client_string.indexOf("&param=EOS") );
-			System.out.println("Query param : " + query_params );
+			//System.out.println("Query param : " + query_params );
 			String q_params[] = query_params.split("&");
-			for(int i=0;i<q_params.length; i++)
-				System.out.println("q : " + q_params[i]  );
+			for(int i=0;i<q_params.length; i++){
+				if( q_params[i].contains("key") ){
+					String  key[] = q_params[i].split("=") ;
+					System.out.println("Key : " + key[1] );
+					setChar(  key[1].charAt(0) );
+				}else
+					System.out.println("q : " + q_params[i]  );
+			}
 
 		}catch(IOException e){
 			
 		}
+	try{
+	clientSocket.close();	
+	}catch(Exception e){
 		
+	}
 	}
 
 	public void run(){

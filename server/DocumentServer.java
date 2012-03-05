@@ -137,6 +137,7 @@ public class DocumentServer {
 
 	public DocumentServer(int number_of_clients){
 		 this.number_of_clients = number_of_clients;
+
 	}
 	
 	public static void main(String args[]){
