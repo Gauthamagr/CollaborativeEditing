@@ -33,25 +33,27 @@ public class ServerThreadedWorker implements  Runnable{
 		this.semaphore++;
 	}
 	synchronized int getCharTyped(){
-			this.semaphore--;
 			return char_typed;
 	}
 	synchronized void increment(){
 		this.semaphore++;
 	}
 	synchronized int getSemaphore(){
-		return this.semaphore;
+		if(semaphore==0)
+			return semaphore;
+		semaphore--;
+		return this.semaphore + 1;
 	}
 
 
 	public void runPersistentConnectionThread(){
 		int counter =0;
 		while(true){
-			//System.out.println("Thread details : " + Thread.currentThread() + " , shared : " + getSharedVar() );
 			//try{
 				if(getSemaphore()>0){
 					char typed = (char )getCharTyped();
-					System.out.println("CHAR SENT !");
+					System.out.println("Thread details : " + Thread.currentThread());
+					System.out.println("CHAR SENT ! Semaphore ="+ this.semaphore);
  					outputChannel.println(typed);
 				}
 			//}catch(InterruptedException e){
@@ -69,7 +71,7 @@ public class ServerThreadedWorker implements  Runnable{
 				input_char_seq[i] = (char) input_stream.read();
 			}
 			String client_string = new String(input_char_seq);
-			System.out.println( "str : " + client_string );
+			//System.out.println( "str : " + client_string );
 			
 			int position_of_question =client_string.indexOf( '?' ,  client_string.indexOf("POST") );
 			String query_params = client_string.substring(position_of_question + 1 , client_string.indexOf("&param=EOS") );
@@ -77,9 +79,12 @@ public class ServerThreadedWorker implements  Runnable{
 			String q_params[] = query_params.split("&");
 			for(int i=0;i<q_params.length; i++){
 				if( q_params[i].contains("key") ){
+					System.out.println("Semaphore value b4 : " + this.semaphore);
 					String  key[] = q_params[i].split("=") ;
 					System.out.println("Key : " + key[1] );
 					setChar(  key[1].charAt(0) );
+					System.out.println("Semaphore value after : " + this.semaphore);
+
 				}else
 					System.out.println("q : " + q_params[i]  );
 			}
