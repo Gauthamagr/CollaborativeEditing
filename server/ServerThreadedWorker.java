@@ -10,11 +10,13 @@ public class ServerThreadedWorker implements  Runnable{
 	protected String thread_type;
 	protected InputStream input_stream;
 	static int semaphore=0;
+	int num_of_clients;
 
 
-	public ServerThreadedWorker(Socket clientSocket , String serverText){
+	public ServerThreadedWorker(Socket clientSocket , String serverText, int num_of_clients){
 		this.clientSocket = clientSocket;
 		this.thread_type = serverText;
+		this.num_of_clients = num_of_clients;
 		try{
 			//Set up the input & output channels
 			outputChannel = new PrintWriter(clientSocket.getOutputStream(),true);
@@ -29,6 +31,7 @@ public class ServerThreadedWorker implements  Runnable{
 	}
 
 	synchronized void setChar(char char_typed){
+		System.out.println("Char written by Thread : " + Thread.currentThread() );
 		this.char_typed = char_typed;
 		this.semaphore++;
 	}
@@ -39,9 +42,11 @@ public class ServerThreadedWorker implements  Runnable{
 		this.semaphore++;
 	}
 	synchronized int getSemaphore(){
-		if(semaphore==0)
+		if(semaphore==0){
 			return semaphore;
+		}
 		semaphore--;
+		System.out.println("Sem returned : " + semaphore + " , for thread : " + Thread.currentThread());
 		return this.semaphore + 1;
 	}
 
@@ -54,7 +59,7 @@ public class ServerThreadedWorker implements  Runnable{
 			//try{
 				if(getSemaphore()>0){
 					char typed = (char )getCharTyped();
-					System.out.println("Thread details : " + Thread.currentThread());
+					System.out.println("Thread details : " + Thread.currentThread() + " Thread name ; " + Thread.currentThread().getName() );
 					System.out.println("CHAR SENT ! Semaphore ="+ this.semaphore);
  					outputChannel.println(typed);
 				}
@@ -66,7 +71,7 @@ public class ServerThreadedWorker implements  Runnable{
 
 	void runKeyPressThread(){
 		try{
-			System.out.println("Num of chars available : " + input_stream.available() );
+			//System.out.println("Num of chars available : " + input_stream.available() );
 			int num_of_chars = input_stream.available();
 			char input_char_seq[] = new char[num_of_chars];
 			for(int i =0;i<input_stream.available() ; i++){
@@ -87,8 +92,7 @@ public class ServerThreadedWorker implements  Runnable{
 					setChar(  key[1].charAt(0) );
 					System.out.println("Semaphore value after : " + this.semaphore);
 
-				}else
-					System.out.println("q : " + q_params[i]  );
+				}
 			}
 
 		}catch(IOException e){

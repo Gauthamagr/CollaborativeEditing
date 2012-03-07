@@ -59,7 +59,7 @@ public class DocumentServer {
 
 		//!!!!!!!!!!! REMOVE -1 !!!!!!!!!!!!
 		for(int i =0;i<this.number_of_clients - 1 ;i++){
-			System.out.println(" Waiting for incoming Persistent conenctions num : " + i);
+			System.out.println("Waiting for incoming Persistent conenctions num : " + i);
 			Socket clientSocket = null;
 			try{
         		clientSocket = Server.accept();
@@ -68,7 +68,7 @@ public class DocumentServer {
 			}
 			System.out.println("Connect button clicked ");
 
-       		new Thread( new ServerThreadedWorker(clientSocket, "Persistent")).start();
+       		new Thread( new ServerThreadedWorker(clientSocket, "Persistent",number_of_clients)).start();
 			//System.out.println("Started new thread for worker ...  ! ");
 	   }
 
@@ -85,7 +85,7 @@ public class DocumentServer {
 		}
 		*/
 		while(true){
-			System.out.println(" Waiting for incoming key press Msgs ");
+			System.out.println("Waiting for incoming key press Msgs ");
 			Socket clientSocket = null;
 			try{
         		clientSocket = Server.accept();
@@ -93,10 +93,9 @@ public class DocumentServer {
 				System.out.println("Cannot accept connections . Cause : "+ e.toString());
 			}
 
-			System.out.println("Key pressed. Spawning new thread");
-       		new Thread( new ServerThreadedWorker(clientSocket, "Key")).start();
+			//System.out.println("Key pressed. Spawning new thread");
+       		new Thread( new ServerThreadedWorker(clientSocket, "Key" , number_of_clients)).start();
 	   }
-
 	}
 
 	public void startServer(){
@@ -124,7 +123,7 @@ public class DocumentServer {
 			System.out.println("Could not establish persistent connection. IOException");
 		}	
 
-		System.out.println("Set up all connections !! \nNow setting up Handler for key press msgs");
+		System.out.println("Set up all connections !! Now setting up Handler for key press msgs");
 	
 		try{
 			processKeyPress();
