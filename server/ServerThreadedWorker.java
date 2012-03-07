@@ -48,6 +48,8 @@ public class ServerThreadedWorker implements  Runnable{
 
 	public void runPersistentConnectionThread(){
 		int counter =0;
+		String persistent_header="HTTP/1.1: 200 OK\r\n"+"Content-Type: text/html\r\n" + "Connection:Keep-Alive\r\n" + "\r\n";
+ 		outputChannel.println( persistent_header);
 		while(true){
 			//try{
 				if(getSemaphore()>0){
@@ -92,11 +94,13 @@ public class ServerThreadedWorker implements  Runnable{
 		}catch(IOException e){
 			
 		}
-	try{
-	clientSocket.close();	
-	}catch(Exception e){
-		
-	}
+		try{
+			input_stream.close();
+			outputChannel.println("a");
+			clientSocket.close();	
+		}catch(Exception e){
+			
+		}
 	}
 
 	public void run(){
