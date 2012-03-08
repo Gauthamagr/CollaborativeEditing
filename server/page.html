@@ -15,19 +15,25 @@
 	<script type="text/javascript">
 
 var mainDoc = document.getElementById("mainDoc");
+var header_sent=0;
 
 function setUpPersistantConnection(e){
 	xmlhttp=new XMLHttpRequest();
 	xmlhttp.onreadystatechange=function(){
 		if(xmlhttp.status==200){
+			if(header_sent!=0){
 			var textSent = new String(xmlhttp.responseText);
 			//alert("str "+textSent+" len : "+textSent.length+" last char : "+textSent.charAt(textSent.length-2));
+			//document.getElementById("mainDoc").innerHTML= textSent;
 			document.getElementById("mainDoc").innerHTML+= textSent.charAt(textSent.length-2);
+			}else{
+				header_sent=1;
+			}
 		}
 		//alert("Inner html : " + xmlhttp.responseText );
 		xmlhttp.responseText = "";
 	};
-	xmlhttp.open("POST","http://localhost:5000",true);
+	xmlhttp.open("POST","http://192.168.0.9:5000",true);
 	xmlhttp.send("STUFF POSTED");
 };
 
@@ -35,7 +41,7 @@ function returnKeyFromCode(code){
  	if(code == 8)
 	 	var charPressed = "Backspace";
 	 else if(code == 32)
-	 	var charPressed = "Spacebar";
+	 	var charPressed = " "; //Spacebar
 	 else if(code == 0)
 	 	var charPressed = "delete";
 	 else 
@@ -52,11 +58,10 @@ function keyPress(e){
 
 	xmlhttp=new XMLHttpRequest();
 	xmlhttp.onreadystatechange=function(){
-		if(xmlhttp.status==200){
-		}
 	};
-	xmlhttp.open("POST","http://localhost:5000?key=" + keyPressed + "&pos=" +mainDoc.selectionStart +"&revno=1&param=EOS",true);
-	xmlhttp.send("STUFF POSTED");
+	//xmlhttp.open("POST","http://localhost:5000",true);
+	xmlhttp.open("POST","http://192.168.0.9:5000?key=" + keyPressed + "&pos=" +mainDoc.selectionStart +"&revno=1&param=EOS",true);
+	xmlhttp.send("Stuff");
 };
 
 function setEventHandlers(){

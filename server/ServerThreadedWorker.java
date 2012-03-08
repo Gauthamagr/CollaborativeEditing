@@ -64,7 +64,7 @@ public class ServerThreadedWorker implements  Runnable{
 	}
 
 	synchronized void setChar(char char_typed){
-		System.out.println("Char written by Thread : " + Thread.currentThread() );
+		//System.out.println("Char written by Thread : " + Thread.currentThread() );
 		this.char_typed = char_typed;
 		char temp[] = new char[2];
 		temp[0] = char_typed;
@@ -78,7 +78,7 @@ public class ServerThreadedWorker implements  Runnable{
 	}
 	synchronized String getCharTyped(){
 		String op = null;
-		System.out.println("String : " + Thread.currentThread().getName() );
+		//System.out.println("String : " + Thread.currentThread().getName() );
 		String threadName[] = Thread.currentThread().getName().split("-");
 		int threadId=0;
 		if(threadName[1].length()>0) 
@@ -119,7 +119,7 @@ public class ServerThreadedWorker implements  Runnable{
 			if(getPersistentThreadStatus(threadId)){
 				String typed = getCharTyped();
 				System.out.println("Thread details : " + Thread.currentThread() + " Thread name ; " + Thread.currentThread().getName() );
-				System.out.println("CHAR SENT ! Semaphore ="+ this.semaphore);
+				System.out.println("CHAR SENT !");
  				outputChannel.println(typed.charAt(0));
 			}
 		}

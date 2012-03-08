@@ -59,7 +59,7 @@ public class DocumentServer {
 
 		//!!!!!!!!!!! REMOVE -1 !!!!!!!!!!!!
 		for(int i =0;i<this.number_of_clients - 1 ;i++){
-			System.out.println("Waiting for incoming Persistent conenctions num : " + i);
+			System.out.println("\n\nWaiting for incoming Persistent conenctions num : " + i);
 			Socket clientSocket = null;
 			try{
         		clientSocket = Server.accept();
