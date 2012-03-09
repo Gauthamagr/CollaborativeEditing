@@ -25,18 +25,19 @@ function setUpPersistantConnection(e){
 				//alert("ready state : " + xmlhttp.readyState );
 				if(header_sent!=0){
 				var textSent = new String(xmlhttp.responseText);
-					//alert("str "+textSent+" len : "+textSent.length+" last char : "+textSent.charAt(textSent.length-2));
+				//alert("response text : " + xmlhttp.responseText );
+				//document.getElementById("mainDoc").value = textSent;
 				//document.getElementById("mainDoc").innerHTML= textSent;
-				document.getElementById("mainDoc").innerHTML+= textSent.charAt(textSent.length-2);
+				document.getElementById("mainDoc").value+= textSent.charAt(textSent.length-2);
+				
+				//console.log("SET CHAR IN BOX : " + textSent.charAt(textSent.length-2) );
 				}else{
 					header_sent=1;
 				}
 			}
 		}catch(e){
-			//alert(e.message);
 			console.log(e.message + " Xml status : ");
 		}
-		//alert("Inner html : " + xmlhttp.responseText );
 		//xmlhttp.responseText = "";
 	};
 	xmlhttp.open("POST","http://192.168.0.9:5000",true);
@@ -62,12 +63,12 @@ function keyPress(e){
 	var locationReplace = document.getElementById("location");
 	locationReplace.innerHTML = mainDoc.selectionStart;
 
-	xmlhttp=new XMLHttpRequest();
-	xmlhttp.onreadystatechange=function(){
+	xmlhttp1=new XMLHttpRequest();
+	xmlhttp1.onreadystatechange=function(){
 	};
 	//xmlhttp.open("POST","http://localhost:5000",true);
-	xmlhttp.open("POST","http://192.168.0.9:5000?key=" + keyPressed + "&pos=" +mainDoc.selectionStart +"&revno=1&param=EOS",true);
-	xmlhttp.send("Stuff");
+	xmlhttp1.open("POST","http://192.168.0.9:5000?key=" + keyPressed + "&pos=" +mainDoc.selectionStart +"&revno=1&param=EOS",true);
+	xmlhttp1.send("Stuff");
 };
 
 function setEventHandlers(){

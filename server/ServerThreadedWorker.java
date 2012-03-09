@@ -10,6 +10,7 @@ public class ServerThreadedWorker implements  Runnable{
  	static char char_typed;
 	protected String thread_type;
 	protected InputStream input_stream;
+	protected OutputStream output_stream;
 	static int semaphore=0;
 	int num_of_clients;
 	static int countOfPersistentThreads=0;
@@ -23,8 +24,10 @@ public class ServerThreadedWorker implements  Runnable{
 		this.num_of_clients = num_of_clients;
 		try{
 			//Set up the input & output channels
-			outputChannel = new PrintWriter(clientSocket.getOutputStream(),true);
+			output_stream = clientSocket.getOutputStream(); 
+			outputChannel = new PrintWriter( output_stream ,true);
 			input_stream= clientSocket.getInputStream();
+			clientSocket.setKeepAlive(true);
 		}catch(IOException e){
 			System.out.println("Could not capture the imput/output stream ");
 		}
@@ -119,9 +122,13 @@ public class ServerThreadedWorker implements  Runnable{
 			if(getPersistentThreadStatus(threadId)){
 				String typed = getCharTyped();
 				System.out.println("Thread details : " + Thread.currentThread() + " Thread name ; " + Thread.currentThread().getName() );
-				System.out.println("CHAR SENT !");
+				System.out.println("CHAR SENT : " + typed.charAt(0) );
 				//String persistent_header="HTTP/1.1: 200 OK\r\n"+"Content-Type: text/html\r\n" + "Connection:Keep-Alive\r\n" + "\r\n";
  				outputChannel.println(typed.charAt(0));
+				try{
+					output_stream.flush();
+				}catch(IOException e){
+				}
  				//outputChannel.println( persistent_header + typed.charAt(0));
 			}
 		}
@@ -160,8 +167,8 @@ public class ServerThreadedWorker implements  Runnable{
 
 		try{
 			System.out.println("Printing to the output tream ");
-			outputChannel.println("a");
-			clientSocket.getOutputStream().close();
+			outputChannel.println("");
+			output_stream.close();
 			input_stream.close();
 			clientSocket.close();	
 		}catch(Exception e){
