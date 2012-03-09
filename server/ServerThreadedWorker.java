@@ -71,7 +71,7 @@ public class ServerThreadedWorker implements  Runnable{
 
 	synchronized void setChar( Message client_msg ){
 		//System.out.println("Char written by Thread : " + Thread.currentThread() );
-		System.out.println("Char written : " + client_msg.getCharacter_pressed() + ", pos : "+ client_msg.getPosition() +" , revnum : "+ client_msg.getClient_version_number() + " , cid : " +client_msg.getClient_id() );
+		//System.out.println("Char written : " + client_msg.getCharacter_pressed() + ", pos : "+ client_msg.getPosition() +" , revnum : "+ client_msg.getClient_version_number() + " , cid : " +client_msg.getClient_id() );
 		this.char_typed = char_typed;
 		char temp[] = new char[2];
 		temp[0] = char_typed;
@@ -83,6 +83,7 @@ public class ServerThreadedWorker implements  Runnable{
 		setPersistentThreadStatusAllThreads();
 		//this.semaphore++;
 	}
+
 	synchronized char getCharTyped(){
 		Message op = null;
 		//System.out.println("String : " + Thread.currentThread().getName() );
@@ -98,6 +99,23 @@ public class ServerThreadedWorker implements  Runnable{
 		return op.getCharacter_pressed();
 			//return char_typed;
 	}
+
+	synchronized Message getProcessedMessage(){
+		Message op = null;
+		//System.out.println("String : " + Thread.currentThread().getName() );
+		String threadName[] = Thread.currentThread().getName().split("-");
+		int threadId=0;
+		if(threadName[1].length()>0) 
+			threadId = Integer.parseInt( threadName[1] );
+		try{
+			op = queue.take();
+			resetPersistentThreadStatus( threadId);
+		}catch(InterruptedException e){
+		}
+		return op;
+			//return char_typed;
+	}
+
 	synchronized void increment(){
 		this.semaphore++;
 	}
@@ -131,7 +149,14 @@ public class ServerThreadedWorker implements  Runnable{
 				threadId=Integer.parseInt( threadName[1] );
 			//int threadId = Integer.parseInt( Thread.currentThread().getName()) ;
 			if(getPersistentThreadStatus(threadId)){
-				char typed = getCharTyped();
+				//char typed = getCharTyped();
+				Message processed_message = getProcessedMessage();
+				int clientId = processed_message.getClient_id();
+				char typed = processed_message.getCharacter_pressed();
+				if(clientId == threadId + 1) {
+					//Do not send the characted back to the same client
+					continue;
+				}
 				System.out.println("Thread details : " + Thread.currentThread() + " Thread name ; " + Thread.currentThread().getName() );
 				System.out.println("CHAR SENT : " + typed );
 				//String persistent_header="HTTP/1.1: 200 OK\r\n"+"Content-Type: text/html\r\n" + "Connection:Keep-Alive\r\n" + "\r\n";
@@ -189,7 +214,6 @@ public class ServerThreadedWorker implements  Runnable{
 		}
 
 		try{
-			System.out.println("Printing to the output tream ");
 			outputChannel.println("");
 			output_stream.close();
 			input_stream.close();
