@@ -20,18 +20,24 @@ var header_sent=0;
 function setUpPersistantConnection(e){
 	xmlhttp=new XMLHttpRequest();
 	xmlhttp.onreadystatechange=function(){
-		if(xmlhttp.status==200){
-			if(header_sent!=0){
-			var textSent = new String(xmlhttp.responseText);
-			//alert("str "+textSent+" len : "+textSent.length+" last char : "+textSent.charAt(textSent.length-2));
-			//document.getElementById("mainDoc").innerHTML= textSent;
-			document.getElementById("mainDoc").innerHTML+= textSent.charAt(textSent.length-2);
-			}else{
-				header_sent=1;
+		try{
+			if( xmlhttp.status==200){
+				//alert("ready state : " + xmlhttp.readyState );
+				if(header_sent!=0){
+				var textSent = new String(xmlhttp.responseText);
+					//alert("str "+textSent+" len : "+textSent.length+" last char : "+textSent.charAt(textSent.length-2));
+				//document.getElementById("mainDoc").innerHTML= textSent;
+				document.getElementById("mainDoc").innerHTML+= textSent.charAt(textSent.length-2);
+				}else{
+					header_sent=1;
+				}
 			}
+		}catch(e){
+			//alert(e.message);
+			console.log(e.message + " Xml status : ");
 		}
 		//alert("Inner html : " + xmlhttp.responseText );
-		xmlhttp.responseText = "";
+		//xmlhttp.responseText = "";
 	};
 	xmlhttp.open("POST","http://192.168.0.9:5000",true);
 	xmlhttp.send("STUFF POSTED");

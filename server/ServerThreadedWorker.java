@@ -120,7 +120,9 @@ public class ServerThreadedWorker implements  Runnable{
 				String typed = getCharTyped();
 				System.out.println("Thread details : " + Thread.currentThread() + " Thread name ; " + Thread.currentThread().getName() );
 				System.out.println("CHAR SENT !");
+				//String persistent_header="HTTP/1.1: 200 OK\r\n"+"Content-Type: text/html\r\n" + "Connection:Keep-Alive\r\n" + "\r\n";
  				outputChannel.println(typed.charAt(0));
+ 				//outputChannel.println( persistent_header + typed.charAt(0));
 			}
 		}
 
@@ -155,9 +157,12 @@ public class ServerThreadedWorker implements  Runnable{
 		}catch(IOException e){
 			
 		}
+
 		try{
-			input_stream.close();
+			System.out.println("Printing to the output tream ");
 			outputChannel.println("a");
+			clientSocket.getOutputStream().close();
+			input_stream.close();
 			clientSocket.close();	
 		}catch(Exception e){
 			
