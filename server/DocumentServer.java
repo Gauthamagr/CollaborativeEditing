@@ -69,7 +69,6 @@ public class DocumentServer {
 			System.out.println("Connect button clicked ");
 
        		new Thread( new ServerThreadedWorker(clientSocket, "Persistent",number_of_clients)).start();
-			//System.out.println("Started new thread for worker ...  ! ");
 	   }
 
 	}

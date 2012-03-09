@@ -1,6 +1,7 @@
 import java.io.*;
 import java.net.*;
 import java.util.concurrent.ArrayBlockingQueue;
+import serverstorage.Message;
 
 public class ServerThreadedWorker implements  Runnable{
 
@@ -14,7 +15,7 @@ public class ServerThreadedWorker implements  Runnable{
 	static int semaphore=0;
 	int num_of_clients;
 	static int countOfPersistentThreads=0;
-	public static ArrayBlockingQueue<String>  queue = new ArrayBlockingQueue<String>(100);
+	public static ArrayBlockingQueue<Message>  queue = new ArrayBlockingQueue<Message>(100);
 	static int persistentThreadStatus[] = new int[100]; 		//There can be a max of 100 Persistent threads
 	static int global_client_number =1;
 	int current_client_number = 0;
@@ -68,21 +69,22 @@ public class ServerThreadedWorker implements  Runnable{
 		else return false;
 	}
 
-	synchronized void setChar(char char_typed){
+	synchronized void setChar( Message client_msg ){
 		//System.out.println("Char written by Thread : " + Thread.currentThread() );
+		System.out.println("Char written : " + client_msg.getCharacter_pressed() + ", pos : "+ client_msg.getPosition() +" , revnum : "+ client_msg.getClient_version_number() + " , cid : " +client_msg.getClient_id() );
 		this.char_typed = char_typed;
 		char temp[] = new char[2];
 		temp[0] = char_typed;
 		try{
-			queue.put(new String(temp));
-			queue.put(new String(temp));
+			queue.put( client_msg );
+			queue.put( client_msg );
 		}catch(InterruptedException e){
 		}
 		setPersistentThreadStatusAllThreads();
 		//this.semaphore++;
 	}
-	synchronized String getCharTyped(){
-		String op = null;
+	synchronized char getCharTyped(){
+		Message op = null;
 		//System.out.println("String : " + Thread.currentThread().getName() );
 		String threadName[] = Thread.currentThread().getName().split("-");
 		int threadId=0;
@@ -93,7 +95,7 @@ public class ServerThreadedWorker implements  Runnable{
 			resetPersistentThreadStatus( threadId);
 		}catch(InterruptedException e){
 		}
-		return op;
+		return op.getCharacter_pressed();
 			//return char_typed;
 	}
 	synchronized void increment(){
@@ -129,11 +131,11 @@ public class ServerThreadedWorker implements  Runnable{
 				threadId=Integer.parseInt( threadName[1] );
 			//int threadId = Integer.parseInt( Thread.currentThread().getName()) ;
 			if(getPersistentThreadStatus(threadId)){
-				String typed = getCharTyped();
+				char typed = getCharTyped();
 				System.out.println("Thread details : " + Thread.currentThread() + " Thread name ; " + Thread.currentThread().getName() );
-				System.out.println("CHAR SENT : " + typed.charAt(0) );
+				System.out.println("CHAR SENT : " + typed );
 				//String persistent_header="HTTP/1.1: 200 OK\r\n"+"Content-Type: text/html\r\n" + "Connection:Keep-Alive\r\n" + "\r\n";
- 				outputChannel.println(typed.charAt(0));
+ 				outputChannel.println(typed);
 				try{
 					output_stream.flush();
 				}catch(IOException e){
@@ -161,13 +163,25 @@ public class ServerThreadedWorker implements  Runnable{
 				String query_params = client_string.substring(position_of_question+1,client_string.indexOf("&param=EOS"));
 				//System.out.println("Query param : " + query_params );
 				String q_params[] = query_params.split("&");
+				String keyPressed="";
+				int position=0, clientId=0, clientRevNum =0, bufferRevNum=0;
 				for(int i=0;i<q_params.length; i++){
 					if( q_params[i].contains("key") ){
 						String  key[] = q_params[i].split("=") ;
-						System.out.println("Key : " + key[1] );
-						setChar(  key[1].charAt(0) );
+						keyPressed = key[1];
+					}else if( q_params[i].contains("pos")){
+						String  positionArr[] = q_params[i].split("=") ;
+						position = Integer.parseInt(positionArr[1] );
+					}else if( q_params[i].contains("cid")){
+						String  clientIdArr[] = q_params[i].split("=") ;
+						clientId = Integer.parseInt( clientIdArr[1] );
+					}else if( q_params[i].contains("revno")){
+						String  revNumArr[] = q_params[i].split("=") ;
+						clientRevNum = Integer.parseInt(revNumArr[1] );
 					}
 				}
+				Message client_msg = new Message(keyPressed.charAt(0) , position, 0, clientRevNum , clientId) ;
+				setChar( client_msg );
 			}
 
 		}catch(IOException e){

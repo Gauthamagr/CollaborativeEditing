@@ -5,27 +5,25 @@ public class Message {
 	int position;
 	int buffer_version_number;
 	int client_version_number;
-	String ip_address;
+	int client_id;
 	
 	public Message(){
 	
 	}
 	
-	public Message(char character_pressed, int position,
-			int buffer_version_number, int client_version_number,
-			String ip_address) {
+	public Message(char character_pressed, int position, int buffer_version_number, int client_version_number, int client_id) {
 		
 		this.character_pressed = character_pressed;
 		this.position = position;
 		this.buffer_version_number = buffer_version_number;
 		this.client_version_number = client_version_number;
-		this.ip_address = ip_address;
+		this.client_id = client_id;
 	}
 	
 	// copy constructor	
 	public Message(Message m){
 		this(m.getCharacter_pressed(),m.getPosition(), m.getBuffer_version_number(),
-				m.client_version_number, m.ip_address);
+				m.client_version_number, m.client_id);
 	}
 	
 	public char getCharacter_pressed() {
@@ -52,11 +50,11 @@ public class Message {
 	public void setClient_version_number(int client_version_number) {
 		this.client_version_number = client_version_number;
 	}
-	public String getIp_address() {
-		return ip_address;
+	public int getClient_id() {
+		return client_id;
 	}
-	public void setIp_address(String ip_address) {
-		this.ip_address = ip_address;
+	public void setClientId(int client_id) {
+		this.client_id = client_id;
 	}
 
 	
