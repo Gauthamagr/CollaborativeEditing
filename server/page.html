@@ -12,6 +12,7 @@
 			<span id="location"></span>
 		<div>
 		<div id="demoText"> AAA </div>
+		<div id="clientId" style="display:none;"></div>
 	<script type="text/javascript">
 
 var mainDoc = document.getElementById("mainDoc");
@@ -32,7 +33,13 @@ function setUpPersistantConnection(e){
 				
 				//console.log("SET CHAR IN BOX : " + textSent.charAt(textSent.length-2) );
 				}else{
-					header_sent=1;
+					//alert("Header sent : " + xmlhttp.responseText );
+					console.log("CHAR got : "+xmlhttp.responseText + " , response len ; " + xmlhttp.responseText.length );
+					if(xmlhttp.responseText.length!=0){
+						header_sent =1; 
+						var initialText = xmlhttp.responseText;
+						document.getElementById("clientId").innerHTML = initialText.charAt( initialText.length - 2) ;
+					}
 				}
 			}
 		}catch(e){
@@ -62,12 +69,12 @@ function keyPress(e){
 	textReplace.innerHTML = keyPressed;
 	var locationReplace = document.getElementById("location");
 	locationReplace.innerHTML = mainDoc.selectionStart;
+	var clientId = document.getElementById("clientId").innerHTML;
 
 	xmlhttp1=new XMLHttpRequest();
 	xmlhttp1.onreadystatechange=function(){
 	};
-	//xmlhttp.open("POST","http://localhost:5000",true);
-	xmlhttp1.open("POST","http://192.168.0.9:5000?key=" + keyPressed + "&pos=" +mainDoc.selectionStart +"&revno=1&param=EOS",true);
+	xmlhttp1.open("POST","http://192.168.0.9:5000?key=" + keyPressed + "&pos=" +mainDoc.selectionStart +"&revno=1&cid="+clientId +"&param=EOS",true);
 	xmlhttp1.send("Stuff");
 };
 

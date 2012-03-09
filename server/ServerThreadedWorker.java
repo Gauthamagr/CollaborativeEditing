@@ -16,6 +16,8 @@ public class ServerThreadedWorker implements  Runnable{
 	static int countOfPersistentThreads=0;
 	public static ArrayBlockingQueue<String>  queue = new ArrayBlockingQueue<String>(100);
 	static int persistentThreadStatus[] = new int[100]; 		//There can be a max of 100 Persistent threads
+	static int global_client_number =1;
+	int current_client_number = 0;
 
 
 	public ServerThreadedWorker(Socket clientSocket , String serverText, int num_of_clients){
@@ -37,8 +39,8 @@ public class ServerThreadedWorker implements  Runnable{
 			for(int i=0;i<100;i++)
 				persistentThreadStatus[i] = 0;
 			//Thread.currentThread().setName(Integer.toString(countOfPersistentThreads++) );
-			Thread.currentThread().setName("PUSHKAR " + Integer.toString(countOfPersistentThreads++ ) );
-			System.out.println("Set the name to thread : " + Integer.toString(countOfPersistentThreads) );
+			//Thread.currentThread().setName("PUSHKAR " + Integer.toString(countOfPersistentThreads++ ) );
+			this.current_client_number = global_client_number++;
 		}
 	}
 
@@ -111,8 +113,15 @@ public class ServerThreadedWorker implements  Runnable{
 
 	public void runPersistentConnectionThread(){
 		int counter =0;
-		String persistent_header="HTTP/1.1: 200 OK\r\n"+"Content-Type: text/html\r\n" + "Connection:Keep-Alive\r\n" + "\r\n";
+		//String persistent_header="HTTP/1.1: 200 OK\r\n"+"Content-Type: text/html\r\n" + "Connection:Keep-Alive\r\n" + "\r\n";
+		String persistent_header="ThreadId-"+ Integer.toString(current_client_number) ;
  		outputChannel.println( persistent_header);
+
+		try{
+			output_stream.flush();
+		}catch(IOException e){
+		}
+
 		while(true){
 			String threadName[] = Thread.currentThread().getName().split("-");
 			int threadId = 0;
