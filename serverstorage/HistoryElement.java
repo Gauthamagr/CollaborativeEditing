@@ -1,15 +1,15 @@
 package serverstorage;
 
 public class HistoryElement {
-	String ip_address;
+	int client_id;
 	int version_number;
 	char character_pressed;
 	int position;
-	public String getIp_address() {
-		return ip_address;
+	public int getClient_id() {
+		return client_id;
 	}
-	public void setIp_address(String ip_address) {
-		this.ip_address = ip_address;
+	public void setClient_id(int client_id) {
+		this.client_id = client_id;
 	}
 	public int getVersion_number() {
 		return version_number;

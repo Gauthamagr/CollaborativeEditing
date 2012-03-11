@@ -2,12 +2,24 @@ package serverstorage;
 
 public class AckBroadcast {
 
+
 	char character_pressed;
 	int position;
 	int server_version_number;
-	int original_client_version_number; // set as 0 for Broadcast
-	String ip_address; 
+	int original_client_version_number; 
+	//String ip_address;
+	int thread_id;
 	
+	public AckBroadcast(char character_pressed, int position,
+			int server_version_number, int original_client_version_number,
+			int thread_id) {
+		super();
+		this.character_pressed = character_pressed;
+		this.position = position;
+		this.server_version_number = server_version_number;
+		this.original_client_version_number = original_client_version_number; // is 0 to indicate it is a Broadcast, has value for ACK
+		this.thread_id = thread_id;
+	}
 	
 	public char getCharacter_pressed() {
 		return character_pressed;
@@ -33,11 +45,11 @@ public class AckBroadcast {
 	public void setOriginal_client_version_number(int original_client_version_number) {
 		this.original_client_version_number = original_client_version_number;
 	}
-	public String getIp_address() {
-		return ip_address;
+	public int getThread_id() {
+		return thread_id;
 	}
-	public void setIp_address(String ip_address) {
-		this.ip_address = ip_address;
+	public void setThread_id(int thread_id) {
+		this.thread_id = thread_id;
 	}
 
 }

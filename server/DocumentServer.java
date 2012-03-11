@@ -1,3 +1,5 @@
+package server;
+
 import java.io.*;
 import java.net.*;
 
@@ -5,13 +7,14 @@ import java.net.*;
 public class DocumentServer {
 
 	int number_of_clients;
-	final int SERVER_PORT=5000;
+	final int SERVER_PORT=9123;
     ServerSocket Server = null;
 
 	//This is required to send the entire Html
 	public void establishInitialConnection() throws FileNotFoundException , IOException{
 		String line_in_file, full_html = "";
 		FileReader html_file = new FileReader("page.html"); 
+		//FileWriter temp = new FileWriter("tmp.abc")
 		BufferedReader html_file_br = new BufferedReader(html_file);
 
 		while( (line_in_file=html_file_br.readLine() ) != null){
@@ -58,7 +61,7 @@ public class DocumentServer {
 		}
 
 		//!!!!!!!!!!! REMOVE -1 !!!!!!!!!!!!
-		for(int i =0;i<this.number_of_clients - 1 ;i++){
+		for(int i =0;i<this.number_of_clients ;i++){
 			System.out.println("\n\nWaiting for incoming Persistent conenctions num : " + i);
 			Socket clientSocket = null;
 			try{
@@ -122,6 +125,12 @@ public class DocumentServer {
 			System.out.println("Could not establish persistent connection. IOException");
 		}	
 
+		System.out.println("Starting the server thread to handle the backend storage logic...");
+		
+		//spawn the server thread after setting up initial connections	
+   		new Thread( new ServerThreadedWorker("Server")).start();
+		
+   		   		
 		System.out.println("Set up all connections !! Now setting up Handler for key press msgs");
 	
 		try{
@@ -148,7 +157,7 @@ public class DocumentServer {
 
 
 		if(number_of_clients == 0)
-			number_of_clients = 3;
+			number_of_clients = 2;
 
 		DocumentServer collab_doc_server = new DocumentServer(number_of_clients);
 

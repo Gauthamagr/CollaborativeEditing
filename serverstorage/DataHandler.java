@@ -14,7 +14,7 @@ public class DataHandler {
 	Vector<HistoryElement> history_queue;
 	
 	
-	DataHandler(){
+	public DataHandler(){
 		server_version_number=0;
 		in_queue = new Vector<Message>();
 		history_queue = new Vector<HistoryElement>();
@@ -25,19 +25,19 @@ public class DataHandler {
 	
 	
 	
-	public void InsertSimple(HistoryElement history_element, Message in_packet){
-		Constants constants = new Constants();
-		
+	public void InsertSimple( Message in_packet){
+
+		HistoryElement history_element=new HistoryElement();
 		server_version_number++;
-		if(in_packet.getCharacter_pressed()==constants.BACKSPACE)
+		if(in_packet.getCharacter_pressed()==Constants.BACKSPACE)
 			data_store.deleteCharAt(in_packet.getPosition() - 1);
-		else if (in_packet.getCharacter_pressed()==constants.DELETE)
+		else if (in_packet.getCharacter_pressed()==Constants.DELETE)
 			data_store.deleteCharAt(in_packet.getPosition());
 		else
 			data_store.insert(in_packet.getPosition(), in_packet.getCharacter_pressed());
 		
 		history_element.setCharacter_pressed(in_packet.getCharacter_pressed());
-		history_element.setIp_address(in_packet.getIp_address());
+		history_element.setClient_id(in_packet.getClient_id());
 		history_element.setPosition(in_packet.getPosition());
 		history_element.setVersion_number(server_version_number);
 		
@@ -46,25 +46,25 @@ public class DataHandler {
 	
 	
 	
-	public void InsertDataIntoServerStore(){
-		while (!in_queue.isEmpty()){
+	public AckBroadcast InsertDataIntoServerStore(Message in_packet){
+		/*while (!in_queue.isEmpty()){
 			Message in_packet = new Message();
 			HistoryElement history_element = new HistoryElement();
 			
-			in_packet = in_queue.remove(0);
+			in_packet = in_queue.remove(0); */
+			
+			AckBroadcast ack_broadcast;
+		
 			if (in_packet.getBuffer_version_number()==server_version_number){
 				
-				InsertSimple(history_element, in_packet);
-				
-				// PREPARE ACK back to same IP
-				// PREPARE BROADCAST to all IPs
-				
-			}
+				InsertSimple( in_packet);
+						
+			} 
 			else if (in_packet.getBuffer_version_number()<server_version_number){
 								
 				for(int i=0;i<history_queue.size();i++){
 					if (history_queue.elementAt(i).getVersion_number()>in_packet.getBuffer_version_number()){
-						if(history_queue.elementAt(i).getIp_address()!=in_packet.getIp_address() 
+						if(history_queue.elementAt(i).getClient_id()!=in_packet.getClient_id() 
 								&& history_queue.elementAt(i).getPosition()<=in_packet.getPosition())
 							if(history_queue.elementAt(i).getCharacter_pressed()==8 || history_queue.elementAt(i).getCharacter_pressed()==24 )
 								in_packet.setPosition(in_packet.getPosition() - 1);
@@ -74,16 +74,20 @@ public class DataHandler {
 					}
 				}
 				
-				InsertSimple(history_element, in_packet);
-				
-				// PREPARE ACK back to same IP
-				// PREPARE BROADCAST to all IPs				
+				InsertSimple(in_packet);
+	
 			}
 			
 			else
 				System.out.println("Error: version numbers are corrupted \n");
-		}		
+				
 
-	}
+	
+	 ack_broadcast = new AckBroadcast(in_packet.getCharacter_pressed(),in_packet.getPosition(),server_version_number,
+			 in_packet.getClient_version_number(), in_packet.client_id );
+	 
+	 return ack_broadcast;
 
+	 
+	}	
 }

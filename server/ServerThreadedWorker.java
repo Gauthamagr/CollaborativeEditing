@@ -1,7 +1,9 @@
+package server;
+
 import java.io.*;
 import java.net.*;
 import java.util.concurrent.ArrayBlockingQueue;
-import serverstorage.Message;
+import serverstorage.*;
 
 public class ServerThreadedWorker implements  Runnable{
 
@@ -13,9 +15,10 @@ public class ServerThreadedWorker implements  Runnable{
 	protected InputStream input_stream;
 	protected OutputStream output_stream;
 	static int semaphore=0;
-	int num_of_clients;
+	static int num_of_clients;
 	static int countOfPersistentThreads=0;
 	public static ArrayBlockingQueue<Message>  queue = new ArrayBlockingQueue<Message>(100);
+	public static ArrayBlockingQueue<AckBroadcast>  ack_broadcast_queue = new ArrayBlockingQueue<AckBroadcast>(100);
 	static int persistentThreadStatus[] = new int[100]; 		//There can be a max of 100 Persistent threads
 	static int global_client_number =1;
 	int current_client_number = 0;
@@ -32,7 +35,7 @@ public class ServerThreadedWorker implements  Runnable{
 			input_stream= clientSocket.getInputStream();
 			clientSocket.setKeepAlive(true);
 		}catch(IOException e){
-			System.out.println("Could not capture the imput/output stream ");
+			System.out.println("Could not capture the input/output stream ");
 		}
 
 		if(serverText == "Persistent"){
@@ -46,7 +49,7 @@ public class ServerThreadedWorker implements  Runnable{
 	}
 
 	public ServerThreadedWorker( String serverText){
-		this.serverText = serverText;
+		this.thread_type = serverText;
 	}
 
 	synchronized void setPersistentThreadStatus(int threadId){
@@ -77,12 +80,13 @@ public class ServerThreadedWorker implements  Runnable{
 		temp[0] = char_typed;
 		try{
 			queue.put( client_msg );
-			queue.put( client_msg );
+			//queue.put( client_msg );
 		}catch(InterruptedException e){
 		}
 		setPersistentThreadStatusAllThreads();
 		//this.semaphore++;
 	}
+	
 
 	synchronized char getCharTyped(){
 		Message op = null;
@@ -100,15 +104,15 @@ public class ServerThreadedWorker implements  Runnable{
 			//return char_typed;
 	}
 
-	synchronized Message getProcessedMessage(){
-		Message op = null;
+	synchronized AckBroadcast getProcessedMessage(){
+		AckBroadcast op = null;
 		//System.out.println("String : " + Thread.currentThread().getName() );
 		String threadName[] = Thread.currentThread().getName().split("-");
 		int threadId=0;
 		if(threadName[1].length()>0) 
 			threadId = Integer.parseInt( threadName[1] );
 		try{
-			op = queue.take();
+			op = ack_broadcast_queue.take();
 			resetPersistentThreadStatus( threadId);
 		}catch(InterruptedException e){
 		}
@@ -150,13 +154,14 @@ public class ServerThreadedWorker implements  Runnable{
 			//int threadId = Integer.parseInt( Thread.currentThread().getName()) ;
 			if(getPersistentThreadStatus(threadId)){
 				//char typed = getCharTyped();
-				Message processed_message = getProcessedMessage();
-				int clientId = processed_message.getClient_id();
+				AckBroadcast processed_message = getProcessedMessage();
+				int clientId = processed_message.getThread_id();
 				char typed = processed_message.getCharacter_pressed();
-				if(clientId == threadId + 1) {
-					//Do not send the characted back to the same client
-					continue;
+				if(clientId != threadId + 1) {
+					//Send as broadcast else skip below step
+					processed_message.setOriginal_client_version_number(0);										
 				}
+				
 				System.out.println("Thread details : " + Thread.currentThread() + " Thread name ; " + Thread.currentThread().getName() );
 				System.out.println("CHAR SENT : " + typed );
 				//String persistent_header="HTTP/1.1: 200 OK\r\n"+"Content-Type: text/html\r\n" + "Connection:Keep-Alive\r\n" + "\r\n";
@@ -223,11 +228,37 @@ public class ServerThreadedWorker implements  Runnable{
 		}
 	}
 
+	void runServerThread(){
+		DataHandler handler = new DataHandler();
+		AckBroadcast ack_broadcast = null;
+		
+		while(true){
+			Message op = null;
+			try{
+				op = queue.take();			
+			}catch(InterruptedException e){
+			}
+			ack_broadcast = handler.InsertDataIntoServerStore(op);
+			for(int i=0;i<num_of_clients;i++){
+				try {
+					ack_broadcast_queue.put(ack_broadcast);
+				} catch (InterruptedException e) {					
+					e.printStackTrace();
+				}
+			}
+		}
+		
+		
+	}
+	
+	
 	public void run(){
 		if(this.thread_type == "Persistent" )
 			runPersistentConnectionThread();
 		else if(this.thread_type == "Key")
 			runKeyPressThread();
+		else if(this.thread_type == "Server")
+			runServerThread();
 		
 	}
 }
