@@ -1,5 +1,3 @@
-package server;
-
 import java.io.*;
 import java.net.*;
 
@@ -7,7 +5,7 @@ import java.net.*;
 public class DocumentServer {
 
 	int number_of_clients;
-	final int SERVER_PORT=9123;
+	final int SERVER_PORT=5000;
     ServerSocket Server = null;
 
 	//This is required to send the entire Html

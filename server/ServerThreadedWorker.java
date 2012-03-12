@@ -1,5 +1,3 @@
-package server;
-
 import java.io.*;
 import java.net.*;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -153,24 +151,26 @@ public class ServerThreadedWorker implements  Runnable{
 				threadId=Integer.parseInt( threadName[1] );
 			//int threadId = Integer.parseInt( Thread.currentThread().getName()) ;
 			if(getPersistentThreadStatus(threadId)){
-				//char typed = getCharTyped();
 				AckBroadcast processed_message = getProcessedMessage();
 				int clientId = processed_message.getThread_id();
-				char typed = processed_message.getCharacter_pressed();
+				char typed_char = processed_message.getCharacter_pressed();
 				if(clientId != threadId + 1) {
 					//Send as broadcast else skip below step
 					processed_message.setOriginal_client_version_number(0);										
 				}
 				
 				System.out.println("Thread details : " + Thread.currentThread() + " Thread name ; " + Thread.currentThread().getName() );
-				System.out.println("CHAR SENT : " + typed );
-				//String persistent_header="HTTP/1.1: 200 OK\r\n"+"Content-Type: text/html\r\n" + "Connection:Keep-Alive\r\n" + "\r\n";
- 				outputChannel.println(typed);
+				System.out.println("CHAR SENT : " + typed_char );
+
+				//Output message format - |Char,position,clientId,RevisionNum|
+				int position = processed_message.getPosition();
+				int server_revision_number = processed_message.getServer_version_number();
+				String output_message="|"+typed_char+","+position + ","+clientId+","+ server_revision_number +"|";
+ 				outputChannel.println(output_message);
 				try{
 					output_stream.flush();
 				}catch(IOException e){
 				}
- 				//outputChannel.println( persistent_header + typed.charAt(0));
 			}
 		}
 
