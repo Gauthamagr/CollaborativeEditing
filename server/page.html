@@ -11,49 +11,144 @@
 			</span>
 			<span id="location"></span>
 		<div>
-		<div id="demoText"> AAA </div>
-		<div id="clientId" style="display:none;"></div>
+		<div id ="clientId"></div>
+		<div id ="Q"></div>
+		<div id = "Buf"></div> 
+		<div id = "ver" style="display:none;"></div> 
 	<script type="text/javascript">
 
 var mainDoc = document.getElementById("mainDoc");
+var version1 = 0;
 var header_sent=0;
+var tmp = "Hello";
 
-function setUpPersistantConnection(e){
+function updateBuffer(key,pos)
+{
+    var oldBuffer = document.getElementById("Buf").innerHTML;
+    pos--;
+     if(key != "%")
+	 {
+         document.getElementById("Buf").innerHTML += oldBuffer + textReplace.innerHTML;
+	 }
+	 else 
+	 { 
+       	   document.getElementById("Buf").innerHTML = oldBuffer.substring(0,pos) + oldBuffer.substring(pos+1,oldBuffer.length);
+	 }
+}
+
+function insertQ(key,pos)
+{
+  var clientId = document.getElementById("clientId").innerHTML;
+  var version_num = document.getElementById("ver");
+  var Q = document.getElementById("Q");
+  version1  = version1 + 1;
+  tmp = key +  "," + pos + "," +clientId + "," + version1 + "|";
+  Q.innerHTML = Q.innerHTML + tmp;
+  //document.getElementById("Q").appendChild(tmp);
+}
+
+function updateClient(textSent)
+{
+	var Q1    = document.getElementById("Q").innerHTML;
+    var queue =  Q1.split(); 
+    var qtuple = queue[0].split(",");
+    var flag  =  0;
+    var buff  = document.getElementById("Buf").innerHTML;
+    var clientID = document.getElementById("clientId").innerHTML;
+    //Section to handle 'ACK'
+    var lastTuple    = textSent.substring((textSent.lastIndexOf("|",textSent.length-5) + 1), textSent.lastIndexOf("|"));
+    var tupleArray   = lastTuple.split(",");
+
+    if(tupleArray[2] == clientID)
+    {
+       console.log("Entered 2");
+       for(i=0;i<1;i++)
+       {
+         if(tupleArray[i] == qtuple[i])
+          flag = 1;
+         else 
+          break;  
+       } 
+       console.log("Flag Value : " + flag);
+       if(flag)
+       {
+          console.log("Entered 3");
+          document.getElementById("Q").innerHTML = Q1.substring(Q1.indexOf("|") + 1,Q1.length); 
+       }
+    }
+    else //Section to handle 'UPD'
+    {
+         
+     //buff.innerHTML = 
+     if(tupleArray[0] != "%")
+     {
+       if(buff.length <= tupleArray[1])
+       { 
+         document.getElementById("Buf").innerHTML += tupleArray[0];
+         document.getElementById("mainDoc").value = document.getElementById("Buf").innerHTML;
+       }
+       else
+       {
+         document.getElementById("Buf").innerHTML = buff.substring(0,tupleArray[1]) + tupleArray[0] + buff.substring(tupleArray[1],buff.length+1);
+         document.getElementById("mainDoc").value = document.getElementById("Buf").innerHTML;         
+       }
+     }
+     else
+     {
+       console.log("Entered 4");
+       console.log("1: "+ buff.substring(0,tupleArray[1]) );
+       console.log("2: "+ buff.substring(tupleArray[1]+1,buff.length) );
+       document.getElementById("Buf").innerHTML = buff.substring(0,tupleArray[1]) + buff.substring(tupleArray[1]+1,buff.length);
+       document.getElementById("mainDoc").value = document.getElementById("Buf").innerHTML;         
+     }
+     
+    } 
+
+  //Section to handle update
+  
+}
+
+function setUpPersistantConnection(e)
+{
 	xmlhttp=new XMLHttpRequest();
-	xmlhttp.onreadystatechange=function(){
+
+    
+	xmlhttp.onreadystatechange=function()
+	{
 		try{
-			if( xmlhttp.status==200){
-				//alert("ready state : " + xmlhttp.readyState );
-				if(header_sent!=0){
-				var textSent = new String(xmlhttp.responseText);
-				//alert("response text : " + xmlhttp.responseText );
-				//document.getElementById("mainDoc").value = textSent;
-				//document.getElementById("mainDoc").innerHTML= textSent;
-				document.getElementById("mainDoc").value+= textSent.charAt(textSent.length-2);
-				
-				//console.log("SET CHAR IN BOX : " + textSent.charAt(textSent.length-2) );
-				}else{
-					//alert("Header sent : " + xmlhttp.responseText );
-					console.log("CHAR got : "+xmlhttp.responseText + " , response len ; " + xmlhttp.responseText.length );
-					if(xmlhttp.responseText.length!=0){
+			if( xmlhttp.status==200)
+			{
+				if(header_sent!=0)
+				{
+				   var textSent = new String(xmlhttp.responseText);
+				   console.log("Response text : " + textSent);
+                   updateClient(textSent);
+				}
+				else
+				{
+				   console.log("CHAR got : "+xmlhttp.responseText + " , response len ; " + xmlhttp.responseText.length );
+				   if(xmlhttp.responseText.length!=0)
+					{
 						header_sent =1; 
 						var initialText = xmlhttp.responseText;
-						document.getElementById("clientId").innerHTML = initialText.charAt( initialText.length - 2) ;
+						document.getElementById("clientId").innerHTML = initialText.charAt(initialText.length - 2) ;
 					}
 				}
 			}
-		}catch(e){
+		}catch(e)
+		{
 			console.log(e.message + " Xml status : ");
 		}
-		//xmlhttp.responseText = "";
 	};
-	xmlhttp.open("POST","http://192.168.0.9:5000",true);
+	xmlhttp.open("POST","http://192.168.0.10:5000",true);
 	xmlhttp.send("STUFF POSTED");
+	mainDoc.onkeypress = function(e){keyPress(e);}
 };
 
-function returnKeyFromCode(code){
+function returnKeyFromCode(code)
+{
  	if(code == 8)
-	 	var charPressed = "Backspace";
+	 	var charPressed = "%";
 	 else if(code == 32)
 	 	var charPressed = " "; //Spacebar
 	 else if(code == 0)
@@ -63,33 +158,37 @@ function returnKeyFromCode(code){
 	return charPressed;
 };
 
-function keyPress(e){
+function keyPress(e)
+{
 	var textReplace = document.getElementById("textReplace");
 	var keyPressed = returnKeyFromCode(e.which)  ;
 	textReplace.innerHTML = keyPressed;
+	
 	var locationReplace = document.getElementById("location");
 	locationReplace.innerHTML = mainDoc.selectionStart;
 	var clientId = document.getElementById("clientId").innerHTML;
-
+    updateBuffer(keyPressed,mainDoc.selectionStart);
+    insertQ(keyPressed,mainDoc.selectionStart);
 	xmlhttp1=new XMLHttpRequest();
-	xmlhttp1.onreadystatechange=function(){
-	};
-	xmlhttp1.open("POST","http://192.168.0.9:5000?key=" + keyPressed + "&pos=" +mainDoc.selectionStart +"&revno=1&cid="+clientId +"&param=EOS",true);
+	xmlhttp1.onreadystatechange=function(){};
+	xmlhttp1.open("POST","http://192.168.0.10:5000?key=" + keyPressed + "&pos=" +mainDoc.selectionStart +"&revno=1&cid="+clientId +"&param=EOS",true);
 	xmlhttp1.send("Stuff");
 };
 
-function setEventHandlers(){
-	mainDoc.onkeypress = function(e){keyPress(e);}
+function setEventHandlers()
+{
+
 	var connectButton=document.getElementById("connectToServer");
 	connectButton.onclick=function(e){setUpPersistantConnection(e);}
 };
 
-function main(){
+function main()
+{
 	setEventHandlers();	
 }
 main();
-</script>
-	</div>
+ </script>
+</div>
 
 </body>
 </html>
