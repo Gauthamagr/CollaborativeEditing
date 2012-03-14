@@ -3,7 +3,7 @@
 <body>
 	<h1 style="text-align:center;"> Shared Document 1</h1>
 	<div style="margin-left:200px;">
-		<textarea id="mainDoc" style="width:900px;height:400px;"></textarea>
+		<textarea id="mainDoc" style="width:900px;height:100px;"></textarea>
 		<div style="margin-top:20px;">
 			<button id="connectToServer"  style="display:block;" value="connect" >Connect</button>
 			<span>
@@ -14,7 +14,8 @@
 		<div id ="clientId"></div>
 		<div id ="Q"></div>
 		<div id = "Buf"></div> 
-		<div id = "ver" style="display:none;"></div> 
+		<div id = "Q_version_number" style="display:none;">0</div> 
+		<div id = "buffer_version_number" style="display:none;">0</div> 
 	<script type="text/javascript">
 
 var mainDoc = document.getElementById("mainDoc");
@@ -25,10 +26,13 @@ var tmp = "Hello";
 function updateBuffer(key,pos)
 {
     var oldBuffer = document.getElementById("Buf").innerHTML;
-    pos--;
+    //pos--;
      if(key != "%")
 	 {
-         document.getElementById("Buf").innerHTML += oldBuffer + textReplace.innerHTML;
+        if(pos <= oldBuffer.length)	 
+          document.getElementById("Buf").innerHTML = oldBuffer.substring(0,pos) + key + oldBuffer.substring(pos+1,oldBuffer.length);
+        else
+          document.getElementById("Buf").innerHTML += key;  
 	 }
 	 else 
 	 { 
@@ -41,13 +45,13 @@ function insertQ(key,pos)
   var clientId = document.getElementById("clientId").innerHTML;
   var version_num = document.getElementById("ver");
   var Q = document.getElementById("Q");
-  version1  = version1 + 1;
+  version_num  = parseInt(version_num) + 1;
   tmp = key +  "," + pos + "," +clientId + "," + version1 + "|";
   Q.innerHTML = Q.innerHTML + tmp;
   //document.getElementById("Q").appendChild(tmp);
 }
 
-function updateClient(textSent)
+function updateClientBuf(textSent)
 {
 	var Q1    = document.getElementById("Q").innerHTML;
     var queue =  Q1.split(); 
@@ -59,53 +63,52 @@ function updateClient(textSent)
     var lastTuple    = textSent.substring((textSent.lastIndexOf("|",textSent.length-5) + 1), textSent.lastIndexOf("|"));
     var tupleArray   = lastTuple.split(",");
 
+	var serverBufferNumber = tupleArray[4];
+	document.getElementById("buffer_version_number").innerHTML = parseInt(serverBufferNumber) + 1;
+	console.log("Server buffer num : " + serverBufferNumber );
+
     if(tupleArray[2] == clientID)
     {
-       console.log("Entered 2");
-       for(i=0;i<1;i++)
-       {
-         if(tupleArray[i] == qtuple[i])
-          flag = 1;
-         else 
-          break;  
-       } 
-       console.log("Flag Value : " + flag);
-       if(flag)
-       {
-          console.log("Entered 3");
-          document.getElementById("Q").innerHTML = Q1.substring(Q1.indexOf("|") + 1,Q1.length); 
-       }
+       	console.log("Entered 2");
+       	for(i=0;i<1;i++)
+       	{
+         	if(tupleArray[i] == qtuple[i])
+          		flag = 1;
+         	else 
+          	break;  
+       	} 
+       	console.log("Flag Value : " + flag);
+       	if(flag)
+       	{
+          	console.log("Entered 3");
+          	document.getElementById("Q").innerHTML = Q1.substring(Q1.indexOf("|") + 1,Q1.length); 
+       	}
     }
     else //Section to handle 'UPD'
     {
          
-     //buff.innerHTML = 
-     if(tupleArray[0] != "%")
-     {
-       if(buff.length <= tupleArray[1])
-       { 
-         document.getElementById("Buf").innerHTML += tupleArray[0];
-         document.getElementById("mainDoc").value = document.getElementById("Buf").innerHTML;
-       }
-       else
-       {
-         document.getElementById("Buf").innerHTML = buff.substring(0,tupleArray[1]) + tupleArray[0] + buff.substring(tupleArray[1],buff.length+1);
-         document.getElementById("mainDoc").value = document.getElementById("Buf").innerHTML;         
-       }
-     }
-     else
-     {
-       console.log("Entered 4");
-       console.log("1: "+ buff.substring(0,tupleArray[1]) );
-       console.log("2: "+ buff.substring(tupleArray[1]+1,buff.length) );
-       document.getElementById("Buf").innerHTML = buff.substring(0,tupleArray[1]) + buff.substring(tupleArray[1]+1,buff.length);
-       document.getElementById("mainDoc").value = document.getElementById("Buf").innerHTML;         
-     }
+     	//buff.innerHTML = 
+     	if(tupleArray[0] != "%")
+     	{
+       		if(buff.length <= tupleArray[1])
+       		{ 
+         		document.getElementById("Buf").innerHTML += tupleArray[0];
+         		document.getElementById("mainDoc").value = document.getElementById("Buf").innerHTML;
+       		}else {
+         		document.getElementById("Buf").innerHTML = buff.substring(0,tupleArray[1]) + tupleArray[0] + buff.substring(tupleArray[1],buff.length+1);
+         		document.getElementById("mainDoc").value = document.getElementById("Buf").innerHTML;         
+       		}
+     	} else {
+       		console.log("Entered 4");
+       		console.log("1: "+ buff.substring(0,tupleArray[1]) );
+       		console.log("2: "+ buff.substring(tupleArray[1]+1,buff.length) );
+       		document.getElementById("Buf").innerHTML = buff.substring(0,tupleArray[1]) + buff.substring(tupleArray[1]+1,buff.length);
+       		document.getElementById("mainDoc").value = document.getElementById("Buf").innerHTML;         
+     	}
      
     } 
 
   //Section to handle update
-  
 }
 
 function setUpPersistantConnection(e)
@@ -122,7 +125,7 @@ function setUpPersistantConnection(e)
 				{
 				   var textSent = new String(xmlhttp.responseText);
 				   console.log("Response text : " + textSent);
-                   updateClient(textSent);
+                   updateClientBuf(textSent);
 				}
 				else
 				{
@@ -140,28 +143,47 @@ function setUpPersistantConnection(e)
 			console.log(e.message + " Xml status : ");
 		}
 	};
-	xmlhttp.open("POST","http://192.168.0.10:5000",true);
+	xmlhttp.open("POST","http://192.168.0.9:5000",true);
 	xmlhttp.send("STUFF POSTED");
-	mainDoc.onkeypress = function(e){keyPress(e);}
+	mainDoc.onkeydown = function(e){keyPress(e);}
 };
 
-function returnKeyFromCode(code)
-{
+function returnKeyFromCode(code){
  	if(code == 8)
-	 	var charPressed = "%";
+	 	var charPressed = "X";
 	 else if(code == 32)
 	 	var charPressed = " "; //Spacebar
-	 else if(code == 0)
-	 	var charPressed = "delete";
-	 else 
+	 else if(code == 37)
+	 	var charPressed = "Arrow";
+	 else if(code == 38)
+	 	var charPressed = "Arrow";
+	 else if(code == 39)
+	 	var charPressed = "Arrow";
+	 else if(code == 40)
+	 	var charPressed = "Arrow";
+	 else if(code == 46)
+	 	var charPressed = "Y";
+	 else
 	 	var charPressed = String.fromCharCode(code);
+
 	return charPressed;
+
 };
 
 function keyPress(e)
 {
 	var textReplace = document.getElementById("textReplace");
 	var keyPressed = returnKeyFromCode(e.which)  ;
+	if(keyPressed == "Arrow")
+		return;
+	var buffer_version_number =document.getElementById("buffer_version_number").innerHTML;
+	var Q_version_number =document.getElementById("Q_version_number").innerHTML;
+
+	//Increment the Q_version number and add it back to the same div
+	Q_version_number = parseInt( Q_version_number) + 1;
+	document.getElementById("Q_version_number").innerHTML = Q_version_number;
+
+
 	textReplace.innerHTML = keyPressed;
 	
 	var locationReplace = document.getElementById("location");
@@ -171,7 +193,7 @@ function keyPress(e)
     insertQ(keyPressed,mainDoc.selectionStart);
 	xmlhttp1=new XMLHttpRequest();
 	xmlhttp1.onreadystatechange=function(){};
-	xmlhttp1.open("POST","http://192.168.0.10:5000?key=" + keyPressed + "&pos=" +mainDoc.selectionStart +"&revno=1&cid="+clientId +"&param=EOS",true);
+	xmlhttp1.open("POST","http://192.168.0.9:5000?key=" + keyPressed + "&pos=" +mainDoc.selectionStart +"&server_revno="+buffer_version_number + "&client_revno=" + Q_version_number +  "&cid="+clientId +"&param=EOS",true);
 	xmlhttp1.send("Stuff");
 };
 

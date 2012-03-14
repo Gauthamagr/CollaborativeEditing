@@ -1,5 +1,3 @@
-package server;
-
 import java.io.*;
 import java.net.*;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -200,6 +198,7 @@ public class ServerThreadedWorker implements  Runnable{
 			
 			int position_of_question =client_string.indexOf( '?' ,  client_string.indexOf("POST") );
 			if(client_string.length() == 0 || position_of_question <=0 ){
+				System.out.println("\n\nMESSAGE MISSING !!!!!!!!!!!!!!\n\n\n");
 			}else{
 				String query_params = client_string.substring(position_of_question+1,client_string.indexOf("&param=EOS"));
 				//System.out.println("Query param : " + query_params );
@@ -226,6 +225,7 @@ public class ServerThreadedWorker implements  Runnable{
 					}
 				}
 				Message client_msg = new Message(keyPressed.charAt(0) , position, serverRevNum, clientRevNum , clientId) ;
+				System.out.println("Client rev nu : "+ clientRevNum +" , serverRevnum L : " + serverRevNum);
 				setChar( client_msg );
 			}
 
