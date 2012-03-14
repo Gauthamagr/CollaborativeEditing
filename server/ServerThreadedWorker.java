@@ -1,3 +1,5 @@
+package server;
+
 import java.io.*;
 import java.net.*;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -165,7 +167,8 @@ public class ServerThreadedWorker implements  Runnable{
 				//Output message format - |Char,position,clientId,RevisionNum|
 				int position = processed_message.getPosition();
 				int server_revision_number = processed_message.getServer_version_number();
-				String output_message="|"+typed_char+","+position + ","+clientId+","+ server_revision_number +"|";
+				int original_client_version_number = processed_message.getOriginal_client_version_number();
+				String output_message="|"+typed_char+","+position + ","+clientId+","+ server_revision_number +","+ original_client_version_number+"|";
  				outputChannel.println(output_message);
 				try{
 					output_stream.flush();
@@ -180,6 +183,14 @@ public class ServerThreadedWorker implements  Runnable{
 		try{
 			//System.out.println("Num of chars available : " + input_stream.available() );
 			int num_of_chars = input_stream.available();
+		   while( num_of_chars<=0){
+               try{
+               Thread.currentThread().sleep(10);
+               }catch(InterruptedException e){
+                   System.out.println("NOT able to sleep :( :( :( ");
+               }
+               num_of_chars = input_stream.available();
+           }
 			char input_char_seq[] = new char[num_of_chars];
 			for(int i =0;i<input_stream.available() ; i++){
 				input_char_seq[i] = (char) input_stream.read();
@@ -194,7 +205,7 @@ public class ServerThreadedWorker implements  Runnable{
 				//System.out.println("Query param : " + query_params );
 				String q_params[] = query_params.split("&");
 				String keyPressed="";
-				int position=0, clientId=0, clientRevNum =0, bufferRevNum=0;
+				int position=0, clientId=0, clientRevNum =0,serverRevNum =0, bufferRevNum=0;
 				for(int i=0;i<q_params.length; i++){
 					if( q_params[i].contains("key") ){
 						String  key[] = q_params[i].split("=") ;
@@ -205,12 +216,16 @@ public class ServerThreadedWorker implements  Runnable{
 					}else if( q_params[i].contains("cid")){
 						String  clientIdArr[] = q_params[i].split("=") ;
 						clientId = Integer.parseInt( clientIdArr[1] );
-					}else if( q_params[i].contains("revno")){
+					}else if( q_params[i].contains("server_revno")){
+						String  revNumArr[] = q_params[i].split("=") ;
+						serverRevNum = Integer.parseInt(revNumArr[1] );
+					}
+					else if( q_params[i].contains("client_revno")){
 						String  revNumArr[] = q_params[i].split("=") ;
 						clientRevNum = Integer.parseInt(revNumArr[1] );
 					}
 				}
-				Message client_msg = new Message(keyPressed.charAt(0) , position, 0, clientRevNum , clientId) ;
+				Message client_msg = new Message(keyPressed.charAt(0) , position, serverRevNum, clientRevNum , clientId) ;
 				setChar( client_msg );
 			}
 
