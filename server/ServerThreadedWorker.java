@@ -85,7 +85,7 @@ public class ServerThreadedWorker implements  Runnable{
 		//this.semaphore++;
 	}
 	
-
+	/* NOT used anymore
 	synchronized char getCharTyped(){
 		Message op = null;
 		//System.out.println("String : " + Thread.currentThread().getName() );
@@ -101,6 +101,7 @@ public class ServerThreadedWorker implements  Runnable{
 		return op.getCharacter_pressed();
 			//return char_typed;
 	}
+	*/
 
 	synchronized AckBroadcast getProcessedMessage(){
 		AckBroadcast op = null;
@@ -136,7 +137,8 @@ public class ServerThreadedWorker implements  Runnable{
 	public void runPersistentConnectionThread(){
 		int counter =0;
 		//String persistent_header="HTTP/1.1: 200 OK\r\n"+"Content-Type: text/html\r\n" + "Connection:Keep-Alive\r\n" + "\r\n";
-		String persistent_header="ThreadId-"+ Integer.toString(current_client_number) ;
+		String persistent_header="<script>ThreadId-"+ Integer.toString(current_client_number) +"-</script>";
+
  		outputChannel.println( persistent_header);
 
 		try{
@@ -145,6 +147,12 @@ public class ServerThreadedWorker implements  Runnable{
 		}
 
 		while(true){
+			try{
+				Thread.currentThread().sleep(50);
+			}catch(Exception e){
+
+			}
+
 			String threadName[] = Thread.currentThread().getName().split("-");
 			int threadId = 0;
 			if(threadName[1].length()>0) 
@@ -167,6 +175,7 @@ public class ServerThreadedWorker implements  Runnable{
 				int server_revision_number = processed_message.getServer_version_number();
 				int original_client_version_number = processed_message.getOriginal_client_version_number();
 				String output_message="|"+typed_char+","+position + ","+clientId+","+ server_revision_number +","+ original_client_version_number+"|";
+				System.out.println("Message sent : " + output_message );
  				outputChannel.println(output_message);
 				try{
 					output_stream.flush();

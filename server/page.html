@@ -29,7 +29,7 @@ var BACKSPACE = "X";
 function updateBuffer(key,pos,serverBufferNumber)
 {
     var oldBuffer = document.getElementById("Buf").innerHTML;
-    console.log("Inside update buffer : key :" + key + ". Pos : " + pos + "Server Version : " + serverBufferNumber);
+    //console.log("Inside update buffer : key :" + key + ". Pos : " + pos + "Server Version : " + serverBufferNumber);
      if(key != BACKSPACE && key != DELETE)
 	 {
         if(pos < oldBuffer.length)	 
@@ -39,7 +39,7 @@ function updateBuffer(key,pos,serverBufferNumber)
 	 }
 	 else if (key == BACKSPACE)
 	 { 
-	    console.log("Inside Backspace");
+	    //console.log("Inside Backspace");
        	if (pos == 1)
        	  document.getElementById("Buf").innerHTML = oldBuffer.substring(1,oldBuffer.length);
        	else
@@ -47,7 +47,7 @@ function updateBuffer(key,pos,serverBufferNumber)
 	 }
 	 else
 	 {
-	    console.log("Inside Delete");	 
+	    //console.log("Inside Delete");	 
        	if (pos == 0)
        	  document.getElementById("Buf").innerHTML = oldBuffer.substring(1,oldBuffer.length);
        	else
@@ -61,13 +61,13 @@ function insertQ(key,pos,clientId)
   var q_version_num = document.getElementById("Q_version_number").innerHTML;
   var buffer_version_number = document.getElementById("buffer_version_number").innerHTML;
   var Q = document.getElementById("Q");
-  console.log("Q Version Number : " + parseInt(q_version_num));
+  //console.log("Q Version Number : " + parseInt(q_version_num));
   q_version_num  = parseInt(q_version_num) + 1;
   if (key != ommit_char)
   {
     tmp = key +  "," + pos + "," + clientId + "," + q_version_num + "," + buffer_version_number + "|";
     Q.innerHTML = Q.innerHTML + tmp;
-    console.log(tmp);
+    //console.log(tmp);
     document.getElementById("Q_version_number").innerHTML = q_version_num;
   }   
   return q_version_num;
@@ -82,26 +82,27 @@ function updateClientBuf(textSent)
     var queue =  Q1.split("|"); 
     var qtuple = queue[0].split(",");
 
-    console.log("Split of queue : " + queue[0] + queue[1] + queue[2] );
-    console.log("Client Queue length : " + queue.length + ", " + Q1.length);
+    ////console.log("Split of queue : " + queue[0] + queue[1] + queue[2] );
+    //console.log("Client Queue length : " + queue.length + ", " + Q1.length);
     //Section to handle 'ACK'
     var lastTuple    = textSent.substring((textSent.lastIndexOf("|",textSent.length-5) + 1), textSent.lastIndexOf("|"));
     var serverTuple   = lastTuple.split(",");
 	var serverBufferNumber = serverTuple[3];
-	console.log("Server buffer num : " + serverBufferNumber );
+	//console.log("Server buffer num : " + serverBufferNumber );
     if(serverTuple[2] == clientID)
     {
        	for(i=0;i<4;i++)
        	{
-       	    console.log("Comparing "+ i + ". ServerTuple : " + serverTuple[i] + ". Queue : " +  qtuple[i]);
+       	    //console.log("Comparing "+ i + ". ServerTuple : " + serverTuple[i] + ". Queue : " +  qtuple[i]);
          	if(serverTuple[i] == qtuple[i])
           	   flag = 1;
          	else 
           	   break;  
        	} 
-       	console.log("Flag Value : " + flag);
+       	//console.log("Flag Value : " + flag);
        	if(flag)
        	{
+			//Remove element from Queue
           	document.getElementById("Q").innerHTML = Q1.substring(Q1.indexOf("|") + 1,Q1.length); 
           	updateBuffer(serverTuple[0],serverTuple[1],serverTuple[3]);
        	}
@@ -109,15 +110,15 @@ function updateClientBuf(textSent)
     else //Section to handle 'UPD'
     {
         var client_q = document.getElementById("Q");
-        console.log("Update Section");
+        //console.log("Update Section");
         updateBuffer(serverTuple[0],serverTuple[1],serverTuple[3]);
      	if(client_q != null && client_q.value != "")
      	{
-     	  console.log("Client Queue is not null" + Q1);
+     	  //console.log("Client Queue is not null" + Q1);
      	}
      	else
      	{
-     	 console.log("Client Queue is null"); 
+     	 //console.log("Client Queue is null"); 
      	}  
      	
          	//document.getElementById("Buf").innerHTML += serverTuple[0];
@@ -133,29 +134,29 @@ function setUpPersistantConnection(e)
 		try{
 			if( xmlhttp.status==200)
 			{
+				var responseText = new String(xmlhttp.responseText);
 				if(header_sent!=0)
 				{
-				   var textSent = new String(xmlhttp.responseText);
-				   console.log("Response text : " + textSent);
-                   updateClientBuf(textSent);
+				   console.log("Response text : " + responseText);
+                   updateClientBuf(responseText);
 				}
 				else
 				{
-				   console.log("CHAR got : "+xmlhttp.responseText + " , response len ; " + xmlhttp.responseText.length );
-				   if(xmlhttp.responseText.length!=0)
+				   //console.log("CHAR got : "+responseText + " , response len ; " + responseText );
+				   if(responseText.length!=0)
 					{
 						header_sent =1; 
-						var initialText = xmlhttp.responseText;
-						document.getElementById("clientId").innerHTML = initialText.charAt(initialText.length - 2) ;
+						var threadDetails = responseText.split("-");
+						document.getElementById("clientId").innerHTML = threadDetails[1];
 					}
 				}
 			}
 		}catch(e)
 		{
-			console.log(e.message + " Xml status : ");
+			//console.log(e.message + " Xml status : ");
 		}
 	};
-	xmlhttp.open("POST","http://192.168.0.13:5000",true);
+	xmlhttp.open("POST","http://192.168.0.9:5000",true);
 	xmlhttp.send("STUFF POSTED");
 	mainDoc.onkeydown = function(e){keyPress(e);}
 };
@@ -173,6 +174,8 @@ function returnKeyFromCode(code){
 	 	var charPressed = ommit_char;
 	 else if(code == 40)
 	 	var charPressed = ommit_char;
+	 else if(code ==16 || code ==17 || code == 18 || code==9)
+	 	var charPressed = ommit_char;
 	 else if(code == 46)
 	 	var charPressed = DELETE;
 	 else
@@ -185,6 +188,7 @@ function returnKeyFromCode(code){
 function keyPress(e)
 {
 	var textReplace = document.getElementById("textReplace");
+	alert("key code : "+ e.which);
 	var keyPressed = returnKeyFromCode(e.which)  ;
     var buffer_version_number =document.getElementById("buffer_version_number").innerHTML;
 	var Q_version_number =document.getElementById("Q_version_number").innerHTML;
@@ -196,10 +200,10 @@ function keyPress(e)
 	textReplace.innerHTML = keyPressed;
 	locationReplace.innerHTML = mainDoc.selectionStart;
 	Q_version_number = insertQ(keyPressed,mainDoc.selectionStart,clientId);
-	console.log("Q version number : " + Q_version_number);
+	//console.log("Q version number : " + Q_version_number);
 	xmlhttp1=new XMLHttpRequest();
 	xmlhttp1.onreadystatechange=function(){};
-	xmlhttp1.open("POST","http://192.168.0.13:5000?key=" + keyPressed + "&pos=" +mainDoc.selectionStart +"&server_revno="+buffer_version_number + "&client_revno=" + Q_version_number +  "&cid="+clientId +"&param=EOS",true);
+	xmlhttp1.open("POST","http://192.168.0.9:5000?key=" + keyPressed + "&pos=" +mainDoc.selectionStart +"&server_revno="+buffer_version_number + "&client_revno=" + Q_version_number +  "&cid="+clientId +"&param=EOS",true);
 	xmlhttp1.send("Stuff");
 };
 
