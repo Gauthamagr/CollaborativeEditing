@@ -95,6 +95,7 @@ public class DocumentServer {
 
 			//System.out.println("Key pressed. Spawning new thread");
        		new Thread( new ServerThreadedWorker(clientSocket, "Key" , number_of_clients)).start();
+			System.out.println("\n\n\n");
 	   }
 	}
 

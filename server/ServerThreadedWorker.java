@@ -167,8 +167,8 @@ public class ServerThreadedWorker implements  Runnable{
 					processed_message.setOriginal_client_version_number(0);										
 				}
 				
-				System.out.println("Thread details : " + Thread.currentThread() + " Thread name ; " + Thread.currentThread().getName() );
-				System.out.println("CHAR SENT : " + typed_char );
+				//System.out.println("Thread details : " + Thread.currentThread() + " Thread name ; " + Thread.currentThread().getName() );
+				System.out.println("CHAR SENT : " + typed_char + " , To client : " + Thread.currentThread().getName() );
 
 				//Output message format - |Char,position,clientId,RevisionNum|
 				int position = processed_message.getPosition();
@@ -234,7 +234,8 @@ public class ServerThreadedWorker implements  Runnable{
 					}
 				}
 				Message client_msg = new Message(keyPressed.charAt(0) , position, serverRevNum, clientRevNum , clientId) ;
-				System.out.println("Client rev nu : "+ clientRevNum +" , serverRevnum L : " + serverRevNum);
+				//System.out.println("Client rev nu : "+ clientRevNum +" , serverRevnum L : " + serverRevNum);
+				System.out.println("Char : "+ keyPressed.charAt(0)  + " , from client : " + clientId);
 				setChar( client_msg );
 			}
 
