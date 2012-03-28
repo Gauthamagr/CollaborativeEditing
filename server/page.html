@@ -16,6 +16,7 @@
 		<div id = "Buf"></div> 
 		<div id = "Q_version_number" >0</div> 
 		<div id = "buffer_version_number">0</div> 
+		<div id = "add_QtoBuffer"></div>
 	<script type="text/javascript">
 
 var mainDoc = document.getElementById("mainDoc");
@@ -81,8 +82,7 @@ function updateClientBuf(textSent)
     var flag  =  0;    
     var queue =  Q1.split("|"); 
     var qtuple = queue[0].split(",");
-
-    ////console.log("Split of queue : " + queue[0] + queue[1] + queue[2] );
+    //console.log("Split of queue : " + queue[0] + queue[1] + queue[2] );
     //console.log("Client Queue length : " + queue.length + ", " + Q1.length);
     //Section to handle 'ACK'
     var lastTuple    = textSent.substring((textSent.lastIndexOf("|",textSent.length-5) + 1), textSent.lastIndexOf("|"));
@@ -110,19 +110,42 @@ function updateClientBuf(textSent)
     else //Section to handle 'UPD'
     {
         var client_q = document.getElementById("Q");
-        //console.log("Update Section");
+        var updateUI;
+        console.log("Update Section");
         updateBuffer(serverTuple[0],serverTuple[1],serverTuple[3]);
-     	if(client_q != null && client_q.value != "")
+     	if(client_q.length > 5)
      	{
-     	  //console.log("Client Queue is not null" + Q1);
+           for(i=0;i<queue.length;i++)
+           {
+             var qtuple = queue[i].split(",");
+             if(qtuple[0] != BACKSPACE && qtuple[0] != DELETE)
+             {
+              if(qtuple[1] >= serverTuple[1])
+              {
+                if(buff.length > qtuple[1])
+                 var updateUI = buff.substring(0,qtuple[1]+1) + qtuple[0] + oldBuffer.substring(qtuple[1]+1,buff.length);
+                else
+                 var updateUI = buff + qtuple[0];  
+              }
+              else
+                 var updateUI = buff.substring(0,qtuple[1]) + qtuple[0] + oldBuffer.substring(qtuple[1],buff.length);
+             }
+             else if(key == BACKSPACE)
+             {
+               //no operation yet
+             }
+             else
+             {
+               //no operation yet
+             }
+           }
+         document.getElementById("mainDoc").value = updateUI;              	              
      	}
      	else
      	{
      	 //console.log("Client Queue is null"); 
+        document.getElementById("mainDoc").value = document.getElementById("Buf").innerHTML;  
      	}  
-     	
-         	//document.getElementById("Buf").innerHTML += serverTuple[0];
-         	document.getElementById("mainDoc").value = document.getElementById("Buf").innerHTML;  
     }
 }
 
@@ -188,7 +211,7 @@ function returnKeyFromCode(code){
 function keyPress(e)
 {
 	var textReplace = document.getElementById("textReplace");
-	alert("key code : "+ e.which);
+	alert("key code : "+ e.which + " ,charcode : "+ e.charCode + " , e.keycode : " + e.keyCode );
 	var keyPressed = returnKeyFromCode(e.which)  ;
     var buffer_version_number =document.getElementById("buffer_version_number").innerHTML;
 	var Q_version_number =document.getElementById("Q_version_number").innerHTML;
