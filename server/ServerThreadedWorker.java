@@ -148,7 +148,7 @@ public class ServerThreadedWorker implements  Runnable{
 
 		while(true){
 			try{
-				Thread.currentThread().sleep(50);
+				Thread.currentThread().sleep(20);
 			}catch(Exception e){
 
 			}
