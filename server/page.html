@@ -59,28 +59,33 @@ function setBufferVersionNumber(buffer_version_number){
 	document.getElementById("buffer_version_number").innerHTML = buffer_version_number;
 }
 
+function setUIContent(UIContent){
+	document.getElementById("mainDoc").value = UIContent;	
+}
+
 function updateBuffer(key,pos,serverBufferNumber){
 	var oldBuffer = getBufferContent();
-	//console.log("Inside update buffer : key :" + key + ". Pos : " + pos + "Server Version : " + serverBufferNumber);
+	console.log("Inside update buffer : key :" + key + ". Pos : " + pos + "Server Version : " + serverBufferNumber);
 	if(key != BACKSPACE && key != DELETE) {
-		if(pos < oldBuffer.length)	 
-			document.getElementById("Buf").innerHTML = oldBuffer.substring(0,pos) + key + oldBuffer.substring(pos+1,oldBuffer.length);
-		else
+		if(pos < oldBuffer.length)	 {
+			console.log("BUF updated !!!!!!!!!!!!!!! oldBuffer : " + oldBuffer + " ,,,, its len : " + oldBuffer.length);
+			document.getElementById("Buf").innerHTML = oldBuffer.substring(0,pos) + key +oldBuffer.substring(pos);
+		} else
 			document.getElementById("Buf").innerHTML += key;  
 
 	 } else if (key == BACKSPACE) { 
 
 		//console.log("Inside Backspace");
 		if (pos == 1)
-	    	document.getElementById("Buf").innerHTML = oldBuffer.substring(1,oldBuffer.length);
+	    	document.getElementById("Buf").innerHTML = oldBuffer.substring(1);
 	   	else
-	   		document.getElementById("Buf").innerHTML = oldBuffer.substring(0,pos-1) + oldBuffer.substring(pos,oldBuffer.length);
+	   		document.getElementById("Buf").innerHTML = oldBuffer.substring(0,pos-1) + oldBuffer.substring(pos);
 	 } else {
 		//console.log("Inside Delete");	 
 	   	if (pos == 0)
-	   		document.getElementById("Buf").innerHTML = oldBuffer.substring(1,oldBuffer.length);
+	   		document.getElementById("Buf").innerHTML = oldBuffer.substring(1);
 	   	else
-	   		document.getElementById("Buf").innerHTML = oldBuffer.substring(0,pos) + oldBuffer.substring(pos+1,oldBuffer.length);	   
+	   		document.getElementById("Buf").innerHTML = oldBuffer.substring(0,pos) + oldBuffer.substring(pos+1);
 	 }
 
 	setBufferVersionNumber( serverBufferNumber );
@@ -122,11 +127,13 @@ function updateClientBuf(textSent)
 		serverTuple[0]=" ";
 
 	var charInMessage = serverTuple[0] ;
-	var positionInMessage = serverTuple[1];
+	var positionInMessage = parseInt(serverTuple[1]);
 	var clientIdInMessage = serverTuple[2];
 	var serverBufferNumberInMessage = serverTuple[3];
 		
 	if(clientIdInMessage == clientID) {
+		//Code to handle Acknowledgement message
+
 	   	for(i=0;i<4;i++) {
 	   	    //console.log("Comparing "+ i + ". ServerTuple : " + serverTuple[i] + ". Queue : " +  qtuple[i]);
 		 	if(serverTuple[i] == qtuple[i])
@@ -134,34 +141,36 @@ function updateClientBuf(textSent)
 		 	else 
 		  	   break;  
 	   	} 
-	   	//console.log("Flag Value : " + flag);
 	   	if(flag){
 			//Remove element from Queue
+			console.log("Buffer B4 ACK MSG =  " + getBufferContent());
 			setQueueContent( Q1.substring(Q1.indexOf("|") + 1,Q1.length) );
 		  	updateBuffer( charInMessage , positionInMessage , serverBufferNumberInMessage);
+			console.log("Buffer after ACK MSG =  " + getBufferContent());
 	   	}
-	} else { //Section to handle 'UPD' 
+	} else { 
+		//Code to handle Broadcast message
 
-		var client_q = document.getElementById("Q").innerHTML;
+		var client_q = getQueueContent();
 		var updateUI;
-		console.log("Update Section");
+		console.log("BROADCAST CASE : buffer B4 update : " + getBufferContent() );
 		updateBuffer( charInMessage , positionInMessage , serverBufferNumberInMessage);
-		console.log("Updated buffer ! . Length of client qu : " + client_q.length );
+		console.log("Updated buffer. New buffer : " + getBufferContent()  );
 	 	if(client_q.length > 5) {
-		console.log("Coming inside the if block !");
+			console.log("Coming inside the if block !");
 
 		   for(i=0;i<queue.length;i++) {
 				var qtuple = queue[i].split(",");
 				var charInQueue = qtuple[0] ;
 				var clientIdInQueue = qtuple[2];
-				var positionInQueue = qtuple[1];
+				var positionInQueue = parseInt(qtuple[1]);
 				var serverBufferNumberInQueue = qtuple[3];
 
 			 	if( charInQueue != BACKSPACE && charInQueue != DELETE) {
 
 			  		if(qtuple[1] >= positionInMessage){
 						if(buff.length > qtuple[1]){
-				 			var updateUI = buff.substring(0,positionInQueue+1) + charInQueue + oldBuffer.substring(positionInQueue+1,buff.length);
+				 			var updateUI = buff.substring(0,positionInQueue+1) + charInQueue + oldBuffer.substring(positionInQueue+1);
 							console.log("Coming to the insert in between case  111! ");
 							alert("case 1 ");
 						} else{
@@ -171,7 +180,7 @@ function updateClientBuf(textSent)
 						}
 			  		}
 			  		else{
-				 		var updateUI = buff.substring(0,positionInQueue) + charInQueue + oldBuffer.substring(positionInQueue,buff.length);
+				 		var updateUI = buff.substring(0,positionInQueue) + charInQueue + oldBuffer.substring(positionInQueue);
 						console.log("Coming to the insert in between case ! ");
 						alert("case 3 ");
 					}
@@ -182,12 +191,12 @@ function updateClientBuf(textSent)
 			   //no operation yet
 			 	}
 		   }
-		 	document.getElementById("mainDoc").value = updateUI;              	              
-	 	}
-	 	else
-	 	{
-	 	 //console.log("Client Queue is null"); 
-		document.getElementById("mainDoc").value = getBufferContent();
+		 	setUIContent( updateUI );
+	 	} else {
+
+	 	 	console.log("Client Queue is null"); 
+			var bufferContent = getBufferContent();
+			setUIContent( bufferContent );
 	 	}  
 	}
 }
