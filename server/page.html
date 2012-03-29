@@ -24,8 +24,8 @@ var version1 = 0;
 var header_sent=0;
 var tmp = "Hello";
 var ommit_char = "arrow";
-var DELETE = "Y";
-var BACKSPACE = "X";
+var DELETE = "Q";
+var BACKSPACE = "Z";
 
 function getBufferContent(){
 	return document.getElementById("Buf").innerHTML;
@@ -83,13 +83,13 @@ function updateBuffer(key,pos,serverBufferNumber){
 
 	 } else if (key == BACKSPACE) { 
 
-		//console.log("Inside Backspace");
+		console.log("Inside Backspace");
 		if (pos == 1)
 	    	document.getElementById("Buf").innerHTML = oldBuffer.substring(1);
 	   	else
 	   		document.getElementById("Buf").innerHTML = oldBuffer.substring(0,pos-1) + oldBuffer.substring(pos);
 	 } else {
-		//console.log("Inside Delete");	 
+		console.log("Inside Delete");	 
 	   	if (pos == 0)
 	   		document.getElementById("Buf").innerHTML = oldBuffer.substring(1);
 	   	else
@@ -286,6 +286,7 @@ function setUpPersistantConnection(e)
 };
 
 function returnKeyFromCode(code){
+	console.log("Char code : " + code );
  	if(code == 8)
 	 	var charPressed = BACKSPACE;
 	 else if(code == 32)
@@ -298,15 +299,17 @@ function returnKeyFromCode(code){
 	 	var charPressed = ommit_char;
 	 else if(code == 40)
 	 	var charPressed = ommit_char;
-	 else if(code ==16 || code ==17 || code == 18 || code==9)
+	 else if(code ==16 || code ==17 || code == 18 || code==9 || code ==35 || code ==36)	//Shift,control,alt,tab,home,end
 	 	var charPressed = ommit_char;
 	 else if(code == 46)
 	 	var charPressed = DELETE;
 	 else
 	 	var charPressed = String.fromCharCode(code);
 
-	return charPressed.toLowerCase();
+	if(charPressed != BACKSPACE && charPressed != DELETE)
+		charPressed = charPressed.toLowerCase();
 
+	return charPressed;
 };
 
 function keyPress(e)
