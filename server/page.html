@@ -16,7 +16,7 @@
 		<div id = "Buf"></div> 
 		<div id = "Q_version_number" >0</div> 
 		<div id = "buffer_version_number">0</div> 
-		<div id = "add_QtoBuffer"></div>
+		<div id = "response_length_received"></div>
 	<script type="text/javascript">
 
 var mainDoc = document.getElementById("mainDoc");
@@ -63,12 +63,20 @@ function setUIContent(UIContent){
 	document.getElementById("mainDoc").value = UIContent;	
 }
 
+function getResponseTextReceived(){
+	return parseInt(document.getElementById("response_length_received").innerHTML) ;
+}
+
+function setResponseTextReceived(length){
+	document.getElementById("response_length_received").innerHTML = length  ;
+}
+
 function updateBuffer(key,pos,serverBufferNumber){
 	var oldBuffer = getBufferContent();
-	console.log("Inside update buffer : key :" + key + ". Pos : " + pos + "Server Version : " + serverBufferNumber);
+	//console.log("Inside update buffer : key :" + key + ". Pos : " + pos + "Server Version : " + serverBufferNumber);
 	if(key != BACKSPACE && key != DELETE) {
 		if(pos < oldBuffer.length)	 {
-			console.log("BUF updated !!!!!!!!!!!!!!! oldBuffer : " + oldBuffer + " ,,,, its len : " + oldBuffer.length);
+			//console.log("BUF updated !!!!!!!!!!!!!!! oldBuffer : " + oldBuffer + " ,,,, its len : " + oldBuffer.length);
 			document.getElementById("Buf").innerHTML = oldBuffer.substring(0,pos) + key +oldBuffer.substring(pos);
 		} else
 			document.getElementById("Buf").innerHTML += key;  
@@ -109,6 +117,23 @@ function insertQ(key,pos,clientId) {
 	return q_version_num;
 }
 
+function processMessage(message){
+	var messageString = new String(message);
+	if(messageString.charAt(0) == '|')
+		messageString = messageString.substring(1);
+	if(messageString.charAt(messageString.length -1) == '|')
+		messageString =messageString.substring(0,messageString.length-1 );
+	
+	var tuple=messageString.split(',');
+	var messageArray=new Array();
+	messageArray["key"] = tuple[0];
+	messageArray["position"] = tuple[1];
+	messageArray["clientId"] = tuple[2];
+	messageArray["q_version_num"] = tuple[3];
+	messageArray["buffer_version_number"] = tuple[4];
+	return messageArray;
+}
+
 function updateClientBuf(textSent)
 {
 	var Q1    = getQueueContent();
@@ -120,42 +145,46 @@ function updateClientBuf(textSent)
 	//console.log("Split of queue : " + queue[0] + queue[1] + queue[2] );
 	//console.log("Client Queue length : " + queue.length + ", " + Q1.length);
 	//Section to handle 'ACK'
-	var lastTuple    = textSent.substring((textSent.lastIndexOf("|",textSent.length-5) + 1), textSent.lastIndexOf("|"));
-	var serverTuple   = lastTuple.split(",");
+	//var lastTuple    = textSent.substring((textSent.lastIndexOf("|",textSent.length-5) + 1), textSent.lastIndexOf("|"));
+	var serverTuple = processMessage(textSent);
+	//var serverTuple   = lastTuple.split(",");
 
-	if(serverTuple[0] == '%' )
-		serverTuple[0]=" ";
+	if(serverTuple["key"] == '%' )
+		serverTuple["key"]=" ";
 
-	var charInMessage = serverTuple[0] ;
-	var positionInMessage = parseInt(serverTuple[1]);
-	var clientIdInMessage = serverTuple[2];
-	var serverBufferNumberInMessage = serverTuple[3];
+	var charInMessage = serverTuple["key"] ;
+	var positionInMessage = parseInt(serverTuple["position"]);
+	var clientIdInMessage = serverTuple["clientId"];
+	var serverBufferNumberInMessage = serverTuple["q_version_num"];
 		
 	if(clientIdInMessage == clientID) {
 		//Code to handle Acknowledgement message
 
-	   	for(i=0;i<4;i++) {
-	   	    //console.log("Comparing "+ i + ". ServerTuple : " + serverTuple[i] + ". Queue : " +  qtuple[i]);
-		 	if(serverTuple[i] == qtuple[i])
-		  	   flag = 1;
-		 	else 
-		  	   break;  
-	   	} 
+		//if( charInMessage  == qtuple[0] && clientIdInMessage == qtuple[2] && serverBufferNumberInMessage == qtuple[3]  )
+		//serverBufferNumberInMessage is not matching with  qtuple[3]. Need to check
+		if( charInMessage  == qtuple[0] && clientIdInMessage == qtuple[2] )
+		   flag = 1;
+		else {
+		   flag = 0;  
+		   console.log("charIn message :" + charInMessage + " , clientIdInMessage : " + clientIdInMessage + " serverBufferNumberInMessage : " + serverBufferNumberInMessage );
+		   console.log("qtuple[0]  : " +qtuple[0] + " qtuple[2] : "+ qtuple[2] + " , qtuple[3] : " + qtuple[3] );
+		}
+
 	   	if(flag){
 			//Remove element from Queue
-			console.log("Buffer B4 ACK MSG =  " + getBufferContent());
+			//console.log("Buffer B4 ACK MSG =  " + getBufferContent());
 			setQueueContent( Q1.substring(Q1.indexOf("|") + 1,Q1.length) );
 		  	updateBuffer( charInMessage , positionInMessage , serverBufferNumberInMessage);
-			console.log("Buffer after ACK MSG =  " + getBufferContent());
+			//console.log("Buffer after ACK MSG =  " + getBufferContent());
 	   	}
 	} else { 
 		//Code to handle Broadcast message
 
 		var client_q = getQueueContent();
 		var updateUI;
-		console.log("BROADCAST CASE : buffer B4 update : " + getBufferContent() );
+		//console.log("BROADCAST CASE : buffer B4 update : " + getBufferContent() );
 		updateBuffer( charInMessage , positionInMessage , serverBufferNumberInMessage);
-		console.log("Updated buffer. New buffer : " + getBufferContent()  );
+		//console.log("Updated buffer. New buffer : " + getBufferContent()  );
 	 	if(client_q.length > 5) {
 			console.log("Coming inside the if block !");
 
@@ -194,7 +223,7 @@ function updateClientBuf(textSent)
 		 	setUIContent( updateUI );
 	 	} else {
 
-	 	 	console.log("Client Queue is null"); 
+	 	 	//console.log("Client Queue is null"); 
 			var bufferContent = getBufferContent();
 			setUIContent( bufferContent );
 	 	}  
@@ -212,17 +241,37 @@ function setUpPersistantConnection(e)
 				var responseText = new String(xmlhttp.responseText);
 				if(header_sent!=0)
 				{
-				   //console.log("Response text : " + responseText);
-				   updateClientBuf(responseText);
+				   	//console.log("Response text : " + responseText);
+					var lengthOfTextReceivedSoFar = getResponseTextReceived();
+					var deltaSet =  new String(responseText.substring(lengthOfTextReceivedSoFar));
+					var lengthOfDeltaSet = deltaSet.length;
+					//console.log("Difference : " + responseText.substring(lengthOfTextReceivedSoFar));
+					var ptr = 0;
+					var countOfPipes = 0;
+					var startIndex = 0;
+
+					while(ptr<=lengthOfDeltaSet){
+						if(deltaSet.charAt(ptr)=='|'){	
+							countOfPipes++;
+							if(countOfPipes%2==0){
+								var endIndex = ptr;
+				   				updateClientBuf(deltaSet.substring(startIndex , endIndex+1 ));
+							}else
+								startIndex = ptr;
+						}
+						ptr++;
+					}
+
+					setResponseTextReceived(responseText.length);
 				}
 				else
 				{
-				   //console.log("CHAR got : "+responseText + " , response len ; " + responseText );
 				   if(responseText.length!=0)
 					{
 						header_sent =1; 
 						var threadDetails = responseText.split("-");
 						setClientId(threadDetails[1]);
+						setResponseTextReceived(responseText.length);
 					}
 				}
 			}
