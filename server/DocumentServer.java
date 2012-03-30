@@ -59,8 +59,12 @@ public class DocumentServer {
 		}
 
 		//!!!!!!!!!!! REMOVE -1 !!!!!!!!!!!!
-		for(int i =0;i<this.number_of_clients ;i++){
-			System.out.println("\n\nWaiting for incoming Persistent conenctions num : " + i);
+		int num_of_threads =0;
+		for(int i =0;i< 2*this.number_of_clients  ;i++){
+			if(num_of_threads == this.number_of_clients)
+				break;
+
+			System.out.println("\n\nWaiting for incoming Persistent connections num : " + i);
 			Socket clientSocket = null;
 			try{
         		clientSocket = Server.accept();
@@ -69,7 +73,31 @@ public class DocumentServer {
 			}
 			System.out.println("Connect button clicked ");
 
+			try{
+				InputStream input_stream= clientSocket.getInputStream();
+				int num_of_chars = input_stream.available();
+               	try{
+               		Thread.currentThread().sleep(200);
+               	}catch(InterruptedException e){
+                  	System.out.println("NOT able to sleep :( :( :( ");
+               	}
+               	num_of_chars = input_stream.available();
+				//System.out.println("Inside while loop");
+				char input_char_seq[] = new char[num_of_chars];
+				for(int j =0;j<input_stream.available() ; j++){
+					input_char_seq[j] = (char) input_stream.read();
+				}
+				String client_string = new String(input_char_seq);
+				//System.out.println( "Persistent connection url : " + client_string );
+				if(client_string.indexOf("PERSISTENTCONNECTION") < 0)
+					continue;
+			}catch(IOException io){
+			}
+
+
        		new Thread( new ServerThreadedWorker(clientSocket, "Persistent",number_of_clients)).start();
+			System.out.println("Persistent Thread spawned !");
+			num_of_threads++;
 	   }
 
 	}

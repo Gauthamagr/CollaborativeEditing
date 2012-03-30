@@ -314,7 +314,7 @@ function setUpPersistantConnection(e)
 			//console.log(e.message + " Xml status : ");
 		}
 	};
-	xmlhttp.open("POST","http://192.168.0.9:5000",true);
+	xmlhttp.open("POST","http://192.168.0.9:5000?q=PERSISTENTCONNECTION",true);
 	xmlhttp.send("STUFF POSTED");
 	mainDoc.onkeydown = function(e){keyPress(e);}
 };
