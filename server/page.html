@@ -162,13 +162,15 @@ function updateClientBuf(textSent)
 
 		//if( charInMessage  == qtuple[0] && clientIdInMessage == qtuple[2] && serverBufferNumberInMessage == qtuple[3]  )
 		//serverBufferNumberInMessage is not matching with  qtuple[3]. Need to check
-		if( charInMessage  == qtuple[0] && clientIdInMessage == qtuple[2] )
+		//if( charInMessage  == qtuple[0] && clientIdInMessage == qtuple[2] )
+		if( clientIdInMessage == qtuple[2] )
 		   flag = 1;
 		else {
 		   flag = 0;  
 		   console.log("charIn message :" + charInMessage + " , clientIdInMessage : " + clientIdInMessage + " serverBufferNumberInMessage : " + serverBufferNumberInMessage );
 		   console.log("qtuple[0]  : " +qtuple[0] + " qtuple[2] : "+ qtuple[2] + " , qtuple[3] : " + qtuple[3] );
 		}
+		flag = 1;
 
 	   	if(flag){
 			//Remove element from Queue
@@ -176,7 +178,9 @@ function updateClientBuf(textSent)
 			setQueueContent( Q1.substring(Q1.indexOf("|") + 1,Q1.length) );
 		  	updateBuffer( charInMessage , positionInMessage , serverBufferNumberInMessage);
 			//console.log("Buffer after ACK MSG =  " + getBufferContent());
-	   	}
+	   	}else{
+			console.log("Did not pop ! ");
+		}
 	} else { 
 		//Code to handle Broadcast message
 
