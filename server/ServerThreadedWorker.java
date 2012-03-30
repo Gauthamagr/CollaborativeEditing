@@ -1,5 +1,3 @@
-package server;
-
 import java.io.*;
 import java.net.*;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -22,6 +20,7 @@ public class ServerThreadedWorker implements  Runnable{
 	public static ArrayBlockingQueue<AckBroadcast>  ack_broadcast_queue = new ArrayBlockingQueue<AckBroadcast>(100);
 	static int persistentThreadStatus[] = new int[100]; 		//There can be a max of 100 Persistent threads
 	static int global_client_number =1;
+	static int current_revision_number_for_client[] = new int[100];
 	int current_client_number = 0;
 
 
@@ -31,6 +30,8 @@ public class ServerThreadedWorker implements  Runnable{
 		ServerThreadedWorker.num_of_clients = num_of_clients;
 		ServerThreadedWorker.persistent_thread_count = num_of_clients;
 		setPersistentThreadStatusAllThreads();
+
+
 		try{
 			//Set up the input & output channels
 			output_stream = clientSocket.getOutputStream(); 
@@ -48,6 +49,9 @@ public class ServerThreadedWorker implements  Runnable{
 			//Thread.currentThread().setName(Integer.toString(countOfPersistentThreads++) );
 			//Thread.currentThread().setName("PUSHKAR " + Integer.toString(countOfPersistentThreads++ ) );
 			this.current_client_number = global_client_number++;
+
+			for(int i =0;i<100;i++)
+				current_revision_number_for_client[i]=0;
 		}
 	}
 
@@ -75,6 +79,14 @@ public class ServerThreadedWorker implements  Runnable{
 		else return false;
 	}
 
+	synchronized int getCurrentRevisionNum(int client_id){
+		return current_revision_number_for_client[client_id];
+	}
+
+	synchronized void setCurrentRevisionNum(int client_id, int revision_num){
+			current_revision_number_for_client[client_id] = revision_num;
+	}
+
 	synchronized void setChar( Message client_msg ){
 		//System.out.println("Char written by Thread : " + Thread.currentThread() );
 		//System.out.println("Char written : " + client_msg.getCharacter_pressed() + ", pos : "+ client_msg.getPosition() +" , revnum : "+ client_msg.getClient_version_number() + " , cid : " +client_msg.getClient_id() );
@@ -82,8 +94,19 @@ public class ServerThreadedWorker implements  Runnable{
 		char temp[] = new char[2];
 		temp[0] = char_typed;
 		try{
+			int client_id = client_msg.getClient_id();
+			int revision_num = client_msg.getClient_version_number();
+			System.out.println("Client id : "+ client_id + " , rev num : "+ revision_num );
+			int loop_counter=0;
+			while(revision_num > getCurrentRevisionNum(client_id)+1){
+				Thread.currentThread().sleep(20);
+				System.out.println("sleeping ! Revnum of this client : " + revision_num + " , global rev num : "+ current_revision_number_for_client[client_id] );
+			loop_counter++;
+			if(loop_counter>100)	//To prevent infinite loop
+				break;
+			}
 			queue.put( client_msg );
-			//queue.put( client_msg );
+			setCurrentRevisionNum(client_id,revision_num);
 		}catch(InterruptedException e){
 		}
 		//setPersistentThreadStatusAllThreads();
@@ -141,8 +164,7 @@ public class ServerThreadedWorker implements  Runnable{
 
 		while(true){
 			try{
-				Thread.currentThread();
-				Thread.sleep(20);
+				Thread.currentThread().sleep(20);
 			}catch(Exception e){
 
 			}
@@ -195,8 +217,7 @@ public class ServerThreadedWorker implements  Runnable{
 			int num_of_chars = input_stream.available();
 		   while( num_of_chars<=0){
                try{
-               Thread.currentThread();
-			Thread.sleep(10);
+               Thread.currentThread().sleep(10);
                }catch(InterruptedException e){
                    System.out.println("NOT able to sleep :( :( :( ");
                }
