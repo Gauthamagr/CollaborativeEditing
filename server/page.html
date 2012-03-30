@@ -16,7 +16,8 @@
 		<div id = "Buf"></div> 
 		<div id = "Q_version_number" >0</div> 
 		<div id = "buffer_version_number">0</div> 
-		<div id = "response_length_received"></div>
+		<div id = "response_length_received" style="display:none;"></div>
+		<div id = "Q_element_count">0</div> 
 	<script type="text/javascript">
 
 var mainDoc = document.getElementById("mainDoc");
@@ -60,7 +61,13 @@ function setBufferVersionNumber(buffer_version_number){
 }
 
 function setUIContent(UIContent){
+	var cursorPosition = getCursorPosition();
 	document.getElementById("mainDoc").value = UIContent;	
+	setCursorPosition(cursorPosition);
+}
+
+function getUIContent(){
+	return document.getElementById("mainDoc").value ;
 }
 
 function getResponseTextReceived(){
@@ -69,6 +76,21 @@ function getResponseTextReceived(){
 
 function setResponseTextReceived(length){
 	document.getElementById("response_length_received").innerHTML = length  ;
+}
+
+function getNumberOfElementsInQueue(){
+	return parseInt(document.getElementById("Q_element_count").innerHTML);
+}
+
+function getCursorPosition(){
+	var mainDoc = document.getElementById("mainDoc");
+	return mainDoc.selectionStart;
+}
+
+function setCursorPosition(position){
+	var mainDoc = document.getElementById("mainDoc");
+	mainDoc.selectionStart =position;
+	mainDoc.selectionEnd = position;
 }
 
 function updateBuffer(key,pos,serverBufferNumber){
@@ -114,7 +136,17 @@ function insertQ(key,pos,clientId) {
 		//console.log(tmp);
 		document.getElementById("Q_version_number").innerHTML = q_version_num;
 	}   
+	//Increment the count of elements in Queue by 1
+	document.getElementById("Q_element_count").innerHTML = getNumberOfElementsInQueue() + 1;
 	return q_version_num;
+}
+
+function removeFromQueue(){
+	var Q1    = getQueueContent();
+	setQueueContent( Q1.substring(Q1.indexOf("|") + 1,Q1.length) );
+
+	//Decrement the count of elements in Queue by 1
+	document.getElementById("Q_element_count").innerHTML = getNumberOfElementsInQueue() - 1;
 }
 
 function processMessage(message){
@@ -127,10 +159,10 @@ function processMessage(message){
 	var tuple=messageString.split(',');
 	var messageArray=new Array();
 	messageArray["key"] = tuple[0];
-	messageArray["position"] = tuple[1];
+	messageArray["position"] = parseInt( tuple[1] );
 	messageArray["clientId"] = tuple[2];
-	messageArray["q_version_num"] = tuple[3];
-	messageArray["buffer_version_number"] = tuple[4];
+	messageArray["q_version_num"] = parseInt(tuple[3]);
+	messageArray["buffer_version_number"] = parseInt(tuple[4]);
 	return messageArray;
 }
 
@@ -163,6 +195,7 @@ function updateClientBuf(textSent)
 		//if( charInMessage  == qtuple[0] && clientIdInMessage == qtuple[2] && serverBufferNumberInMessage == qtuple[3]  )
 		//serverBufferNumberInMessage is not matching with  qtuple[3]. Need to check
 		//if( charInMessage  == qtuple[0] && clientIdInMessage == qtuple[2] )
+		/*
 		if( clientIdInMessage == qtuple[2] )
 		   flag = 1;
 		else {
@@ -170,12 +203,13 @@ function updateClientBuf(textSent)
 		   console.log("charIn message :" + charInMessage + " , clientIdInMessage : " + clientIdInMessage + " serverBufferNumberInMessage : " + serverBufferNumberInMessage );
 		   console.log("qtuple[0]  : " +qtuple[0] + " qtuple[2] : "+ qtuple[2] + " , qtuple[3] : " + qtuple[3] );
 		}
+		*/
 		flag = 1;
 
 	   	if(flag){
 			//Remove element from Queue
 			//console.log("Buffer B4 ACK MSG =  " + getBufferContent());
-			setQueueContent( Q1.substring(Q1.indexOf("|") + 1,Q1.length) );
+			removeFromQueue();
 		  	updateBuffer( charInMessage , positionInMessage , serverBufferNumberInMessage);
 			//console.log("Buffer after ACK MSG =  " + getBufferContent());
 	   	}else{
@@ -185,14 +219,14 @@ function updateClientBuf(textSent)
 		//Code to handle Broadcast message
 
 		var client_q = getQueueContent();
-		var updateUI;
 		//console.log("BROADCAST CASE : buffer B4 update : " + getBufferContent() );
 		updateBuffer( charInMessage , positionInMessage , serverBufferNumberInMessage);
 		//console.log("Updated buffer. New buffer : " + getBufferContent()  );
-	 	if(client_q.length > 5) {
+		var numOfQueueElements = getNumberOfElementsInQueue();
+	 	if(numOfQueueElements > 0) {
 			console.log("Coming inside the if block !");
 
-		   for(i=0;i<queue.length;i++) {
+		   	for(i=0;i<numOfQueueElements;i++) {
 				var qtuple = queue[i].split(",");
 				var charInQueue = qtuple[0] ;
 				var clientIdInQueue = qtuple[2];
@@ -200,37 +234,33 @@ function updateClientBuf(textSent)
 				var serverBufferNumberInQueue = qtuple[3];
 
 			 	if( charInQueue != BACKSPACE && charInQueue != DELETE) {
-
-			  		if(qtuple[1] >= positionInMessage){
-						if(buff.length > qtuple[1]){
-				 			var updateUI = buff.substring(0,positionInQueue+1) + charInQueue + oldBuffer.substring(positionInQueue+1);
-							console.log("Coming to the insert in between case  111! ");
-							alert("case 1 ");
-						} else{
-				 			var updateUI = buff + charInQueue;  
-							console.log("Coming to the insert  at end case 222 ! ");
-							alert("case 2 ");
-						}
+			  		if( positionInQueue < positionInMessage){
+						positionInMessage++;
 			  		}
-			  		else{
-				 		var updateUI = buff.substring(0,positionInQueue) + charInQueue + oldBuffer.substring(positionInQueue);
-						console.log("Coming to the insert in between case ! ");
-						alert("case 3 ");
-					}
 			 	}
-			 	else if(key == BACKSPACE) {
-			   //no operation yet
-			 	} else {
-			   //no operation yet
+			 	else {
+			  		if( positionInQueue <= positionInMessage){
+						positionInMessage--;
+			  		}
 			 	}
-		   }
-		 	setUIContent( updateUI );
+		   	}
+			var oldUI = getUIContent();
+			var newUI = oldUI.substring(0,positionInMessage) + charInMessage + oldUI.substring(positionInMessage);
+			setUIContent( newUI );
 	 	} else {
-
 	 	 	//console.log("Client Queue is null"); 
 			var bufferContent = getBufferContent();
 			setUIContent( bufferContent );
 	 	}  
+
+		var cursorPosition = getCursorPosition();
+		console.log("Beginning pos : "+ cursorPosition + " , position in msg : "+ positionInMessage);
+		if(cursorPosition > positionInMessage && charInMessage !=BACKSPACE && charInMessage!=DELETE )
+			cursorPosition++;
+		else if(cursorPosition > positionInMessage && ( charInMessage == BACKSPACE || charInMessage==DELETE ))
+			cursorPosition--;
+		setCursorPosition(cursorPosition);
+		console.log("Changed pos : "+ cursorPosition);
 	}
 }
 
@@ -290,7 +320,7 @@ function setUpPersistantConnection(e)
 };
 
 function returnKeyFromCode(code){
-	console.log("Char code : " + code );
+	//console.log("Char code : " + code );
  	if(code == 8)
 	 	var charPressed = BACKSPACE;
 	 else if(code == 32)
@@ -319,7 +349,6 @@ function returnKeyFromCode(code){
 function keyPress(e)
 {
 	var textReplace = document.getElementById("textReplace");
-	//alert("key code : "+ e.which + " ,charcode : "+ e.charCode + " , e.keycode : " + e.keyCode );
 	var keyPressed = returnKeyFromCode(e.which)  ;
 	var buffer_version_number = getBufferVersionNumber();
 	var Q_version_number = getQueueVersionNumber();
@@ -329,9 +358,7 @@ function keyPress(e)
 		return;
 	//Increment the Q_version number and add it back to the same div
 	textReplace.innerHTML = keyPressed;
-	//locationReplace.innerHTML = mainDoc.selectionStart;
 	Q_version_number = insertQ(keyPressed,mainDoc.selectionStart,clientId);
-	//console.log("Q version number : " + Q_version_number);
 	xmlhttp1=new XMLHttpRequest();
 	xmlhttp1.onreadystatechange=function(){};
 	xmlhttp1.open("POST","http://192.168.0.9:5000?key=" + keyPressed + "&pos=" +mainDoc.selectionStart +"&server_revno="+buffer_version_number + "&client_revno=" + Q_version_number +  "&cid="+clientId +"&param=EOS",true);
