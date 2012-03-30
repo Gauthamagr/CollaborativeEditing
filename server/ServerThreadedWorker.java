@@ -1,3 +1,5 @@
+package server;
+
 import java.io.*;
 import java.net.*;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -14,6 +16,7 @@ public class ServerThreadedWorker implements  Runnable{
 	protected OutputStream output_stream;
 	static int semaphore=0;
 	static int num_of_clients;
+	static int persistent_thread_count;
 	static int countOfPersistentThreads=0;
 	public static ArrayBlockingQueue<Message>  queue = new ArrayBlockingQueue<Message>(100);
 	public static ArrayBlockingQueue<AckBroadcast>  ack_broadcast_queue = new ArrayBlockingQueue<AckBroadcast>(100);
@@ -25,7 +28,9 @@ public class ServerThreadedWorker implements  Runnable{
 	public ServerThreadedWorker(Socket clientSocket , String serverText, int num_of_clients){
 		this.clientSocket = clientSocket;
 		this.thread_type = serverText;
-		this.num_of_clients = num_of_clients;
+		ServerThreadedWorker.num_of_clients = num_of_clients;
+		ServerThreadedWorker.persistent_thread_count = num_of_clients;
+		setPersistentThreadStatusAllThreads();
 		try{
 			//Set up the input & output channels
 			output_stream = clientSocket.getOutputStream(); 
@@ -73,7 +78,7 @@ public class ServerThreadedWorker implements  Runnable{
 	synchronized void setChar( Message client_msg ){
 		//System.out.println("Char written by Thread : " + Thread.currentThread() );
 		//System.out.println("Char written : " + client_msg.getCharacter_pressed() + ", pos : "+ client_msg.getPosition() +" , revnum : "+ client_msg.getClient_version_number() + " , cid : " +client_msg.getClient_id() );
-		this.char_typed = char_typed;
+		ServerThreadedWorker.char_typed = char_typed;
 		char temp[] = new char[2];
 		temp[0] = char_typed;
 		try{
@@ -81,27 +86,10 @@ public class ServerThreadedWorker implements  Runnable{
 			//queue.put( client_msg );
 		}catch(InterruptedException e){
 		}
-		setPersistentThreadStatusAllThreads();
+		//setPersistentThreadStatusAllThreads();
 		//this.semaphore++;
 	}
 	
-	/* NOT used anymore
-	synchronized char getCharTyped(){
-		Message op = null;
-		//System.out.println("String : " + Thread.currentThread().getName() );
-		String threadName[] = Thread.currentThread().getName().split("-");
-		int threadId=0;
-		if(threadName[1].length()>0) 
-			threadId = Integer.parseInt( threadName[1] );
-		try{
-			op = queue.take();
-			resetPersistentThreadStatus( threadId);
-		}catch(InterruptedException e){
-		}
-		return op.getCharacter_pressed();
-			//return char_typed;
-	}
-	*/
 
 	synchronized AckBroadcast getProcessedMessage(){
 		AckBroadcast op = null;
@@ -120,7 +108,7 @@ public class ServerThreadedWorker implements  Runnable{
 	}
 
 	synchronized void increment(){
-		this.semaphore++;
+		ServerThreadedWorker.semaphore++;
 	}
 	synchronized int getSemaphore(){
 		System.out.println("Notified !");
@@ -145,26 +133,41 @@ public class ServerThreadedWorker implements  Runnable{
 			output_stream.flush();
 		}catch(IOException e){
 		}
+		
+		String threadName[] = Thread.currentThread().getName().split("-");
+		int threadId = 0;
+		if(threadName[1].length()>0) 
+			threadId=Integer.parseInt( threadName[1] );
 
 		while(true){
 			try{
-				Thread.currentThread().sleep(20);
+				Thread.currentThread();
+				Thread.sleep(20);
 			}catch(Exception e){
 
 			}
 
-			String threadName[] = Thread.currentThread().getName().split("-");
-			int threadId = 0;
-			if(threadName[1].length()>0) 
-				threadId=Integer.parseInt( threadName[1] );
 			//int threadId = Integer.parseInt( Thread.currentThread().getName()) ;
 			if(getPersistentThreadStatus(threadId)){
+				
+				
 				AckBroadcast processed_message = getProcessedMessage();
+				
+				//the below code is to ensure that the same thread does not pop same message from abstract queue	 
+				resetPersistentThreadStatus(threadId);
+				persistent_thread_count--;
+				
+				if(persistent_thread_count==0){
+					persistent_thread_count=num_of_clients;
+					setPersistentThreadStatusAllThreads();
+				}
+				
+				
 				int clientId = processed_message.getThread_id();
 				char typed_char = processed_message.getCharacter_pressed();
 				if(clientId != threadId + 1) {
 					//Send as broadcast else skip below step
-					processed_message.setOriginal_client_version_number(0);										
+					//processed_message.setOriginal_client_version_number(0);										
 				}
 				
 				//System.out.println("Thread details : " + Thread.currentThread() + " Thread name ; " + Thread.currentThread().getName() );
@@ -192,7 +195,8 @@ public class ServerThreadedWorker implements  Runnable{
 			int num_of_chars = input_stream.available();
 		   while( num_of_chars<=0){
                try{
-               Thread.currentThread().sleep(10);
+               Thread.currentThread();
+			Thread.sleep(10);
                }catch(InterruptedException e){
                    System.out.println("NOT able to sleep :( :( :( ");
                }
