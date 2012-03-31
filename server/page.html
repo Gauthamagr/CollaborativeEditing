@@ -362,6 +362,8 @@ function keyPress(e)
 		return;
 	//Increment the Q_version number and add it back to the same div
 	textReplace.innerHTML = keyPressed;
+	if(keyPressed==BACKSPACE && mainDoc.selectionStart==0)
+		return;
 	Q_version_number = insertQ(keyPressed,mainDoc.selectionStart,clientId);
 	xmlhttp1=new XMLHttpRequest();
 	xmlhttp1.onreadystatechange=function(){};
