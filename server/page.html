@@ -1,23 +1,24 @@
 <html>
-<head><title> Collaborative Document Editing</title> </head>
+<head><title> Collaborative Document Editing</title> 
+</head>
 <body>
-	<h1 style="text-align:center;"> Shared Document 1</h1>
+	<h1 style="text-align:center;"> Shared Document </h1>
 	<div style="margin-left:200px;">
-		<textarea id="mainDoc" style="width:900px;height:100px;"></textarea>
+		<textarea id="mainDoc" style="width:900px;height:400px;"></textarea>
 		<div style="margin-top:20px;">
-			<button id="connectToServer"  style="display:block;" value="connect" >Connect</button>
-			<span>
+			<button id="connectToServer"  style="display:block;margin-bottom:10px;" value="connect" >Connect</button>
+			<span  style="display:none;">
 				Key pressed : <span id="textReplace"> </span>  ... &nbsp; &nbsp;Location :
 			</span>
 			<span id="location"></span>
 		<div>
-		<div id ="clientId"></div>
-		<div id ="Q"></div>
-		<div id = "Buf"></div> 
-		<div id = "Q_version_number" >0</div> 
-		<div id = "buffer_version_number">0</div> 
+		Client Id : <div id ="clientId" style="display:inline;"></div>
+		<div id ="Q" style="display:none;"></div>
+		<div id = "Buf" style="display:none;"></div> 
+		<div id = "Q_version_number" style="display:none;" >0</div> 
+		<div id = "buffer_version_number"  style="display:none;">0</div> 
 		<div id = "response_length_received" style="display:none;"></div>
-		<div id = "Q_element_count">0</div> 
+		<div id = "Q_element_count"  style="display:none;">0</div> 
 	<script type="text/javascript">
 
 var mainDoc = document.getElementById("mainDoc");
@@ -244,9 +245,19 @@ function updateClientBuf(textSent)
 			  		}
 			 	}
 		   	}
+
 			var oldUI = getUIContent();
-			var newUI = oldUI.substring(0,positionInMessage) + charInMessage + oldUI.substring(positionInMessage);
+
+			var newUI;
+			if(charInMessage!=BACKSPACE && charInMessage!=DELETE){
+				newUI = oldUI.substring(0,positionInMessage) + charInMessage + oldUI.substring(positionInMessage);
+			} else if (charInMessage==BACKSPACE){
+				newUI = oldUI.substring(0,positionInMessage-1) + oldUI.substring(positionInMessage);
+			}else {
+				newUI = oldUI.substring(0,positionInMessage) + oldUI.substring(positionInMessage + 1);
+			}
 			setUIContent( newUI );
+
 	 	} else {
 	 	 	//console.log("Client Queue is null"); 
 			var bufferContent = getBufferContent();
@@ -352,7 +363,7 @@ function returnKeyFromCode(code,shiftKey){
 
 function keyPress(e)
 {
-	var textReplace = document.getElementById("textReplace");
+	//var textReplace = document.getElementById("textReplace");
 	var keyPressed = returnKeyFromCode(e.which , e.shiftKey)  ;
 	var buffer_version_number = getBufferVersionNumber();
 	var Q_version_number = getQueueVersionNumber();
@@ -361,7 +372,7 @@ function keyPress(e)
 	if(keyPressed == ommit_char)
 		return;
 	//Increment the Q_version number and add it back to the same div
-	textReplace.innerHTML = keyPressed;
+	//textReplace.innerHTML = keyPressed;
 	if(keyPressed==BACKSPACE && mainDoc.selectionStart==0)
 		return;
 	Q_version_number = insertQ(keyPressed,mainDoc.selectionStart,clientId);
