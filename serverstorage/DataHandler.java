@@ -55,6 +55,12 @@ public class DataHandler {
 			in_packet = in_queue.remove(0); */
 			
 			AckBroadcast ack_broadcast;
+			
+			if(in_packet.getCharacter_pressed()==Constants.BACKSPACE && in_packet.getPosition()==0){
+				 ack_broadcast = new AckBroadcast('0', 0, 0, -1, 0);						 
+				 return ack_broadcast;
+				
+			}
 		
 			if (in_packet.getBuffer_version_number()==server_version_number){
 				
@@ -74,7 +80,7 @@ public class DataHandler {
 					if (history_queue.elementAt(i).getVersion_number()>in_packet.getBuffer_version_number()){
 						if(history_queue.elementAt(i).getClient_id()!=in_packet.getClient_id() 
 								&& history_queue.elementAt(i).getPosition()<=in_packet.getPosition())
-							if(history_queue.elementAt(i).getCharacter_pressed()==8 || history_queue.elementAt(i).getCharacter_pressed()==24 )
+							if(history_queue.elementAt(i).getCharacter_pressed()==Constants.BACKSPACE || history_queue.elementAt(i).getCharacter_pressed()==Constants.DELETE )
 								in_packet.setPosition(in_packet.getPosition() - 1);
 							else
 								in_packet.setPosition(in_packet.getPosition() +	 1);
