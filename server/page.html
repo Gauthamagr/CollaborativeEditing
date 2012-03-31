@@ -25,8 +25,8 @@ var version1 = 0;
 var header_sent=0;
 var tmp = "Hello";
 var ommit_char = "arrow";
-var DELETE = "Q";
-var BACKSPACE = "Z";
+var DELETE = ":";
+var BACKSPACE = ";";
 
 function getBufferContent(){
 	return document.getElementById("Buf").innerHTML;
@@ -319,7 +319,7 @@ function setUpPersistantConnection(e)
 	mainDoc.onkeydown = function(e){keyPress(e);}
 };
 
-function returnKeyFromCode(code){
+function returnKeyFromCode(code,shiftKey){
 	//console.log("Char code : " + code );
  	if(code == 8)
 	 	var charPressed = BACKSPACE;
@@ -337,11 +337,15 @@ function returnKeyFromCode(code){
 	 	var charPressed = ommit_char;
 	 else if(code == 46)
 	 	var charPressed = DELETE;
-	 else
+	 else if(code == 190)
+	 	var charPressed = ".";
+	else
 	 	var charPressed = String.fromCharCode(code);
 
 	if(charPressed != BACKSPACE && charPressed != DELETE)
 		charPressed = charPressed.toLowerCase();
+	if(shiftKey && (code>=65 && code<=90) )
+		charPressed = charPressed.toUpperCase();
 
 	return charPressed;
 };
@@ -349,7 +353,7 @@ function returnKeyFromCode(code){
 function keyPress(e)
 {
 	var textReplace = document.getElementById("textReplace");
-	var keyPressed = returnKeyFromCode(e.which)  ;
+	var keyPressed = returnKeyFromCode(e.which , e.shiftKey)  ;
 	var buffer_version_number = getBufferVersionNumber();
 	var Q_version_number = getQueueVersionNumber();
 	//var locationReplace = document.getElementById("location");
