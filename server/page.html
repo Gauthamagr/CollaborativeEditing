@@ -106,13 +106,13 @@ function updateBuffer(key,pos,serverBufferNumber){
 
 	 } else if (key == BACKSPACE) { 
 
-		console.log("Inside Backspace");
+		//console.log("Inside Backspace");
 		if (pos == 1)
 	    	document.getElementById("Buf").innerHTML = oldBuffer.substring(1);
 	   	else
 	   		document.getElementById("Buf").innerHTML = oldBuffer.substring(0,pos-1) + oldBuffer.substring(pos);
 	 } else {
-		console.log("Inside Delete");	 
+		//console.log("Inside Delete");	 
 	   	if (pos == 0)
 	   		document.getElementById("Buf").innerHTML = oldBuffer.substring(1);
 	   	else
@@ -192,6 +192,7 @@ function updateClientBuf(textSent)
 		
 	if(clientIdInMessage == clientID) {
 		//Code to handle Acknowledgement message
+		console.log("Received Acknowledgement for Character : "+charInMessage+ " at Position : "+positionInMessage+" , Server Buffer number : " + serverBufferNumberInMessage);
 
 		//if( charInMessage  == qtuple[0] && clientIdInMessage == qtuple[2] && serverBufferNumberInMessage == qtuple[3]  )
 		//serverBufferNumberInMessage is not matching with  qtuple[3]. Need to check
@@ -201,8 +202,8 @@ function updateClientBuf(textSent)
 		   flag = 1;
 		else {
 		   flag = 0;  
-		   console.log("charIn message :" + charInMessage + " , clientIdInMessage : " + clientIdInMessage + " serverBufferNumberInMessage : " + serverBufferNumberInMessage );
-		   console.log("qtuple[0]  : " +qtuple[0] + " qtuple[2] : "+ qtuple[2] + " , qtuple[3] : " + qtuple[3] );
+		   //console.log("charIn message :" + charInMessage + " , clientIdInMessage : " + clientIdInMessage + " serverBufferNumberInMessage : " + serverBufferNumberInMessage );
+		   //console.log("qtuple[0]  : " +qtuple[0] + " qtuple[2] : "+ qtuple[2] + " , qtuple[3] : " + qtuple[3] );
 		}
 		*/
 		flag = 1;
@@ -214,10 +215,11 @@ function updateClientBuf(textSent)
 		  	updateBuffer( charInMessage , positionInMessage , serverBufferNumberInMessage);
 			//console.log("Buffer after ACK MSG =  " + getBufferContent());
 	   	}else{
-			console.log("Did not pop ! ");
+			//console.log("Did not pop ! ");
 		}
 	} else { 
 		//Code to handle Broadcast message
+		console.log("Received Broadcast for Character : "+charInMessage+ " at Position : "+positionInMessage+" , Server Buffer number : " + serverBufferNumberInMessage +" . Change done by client : "+ clientIdInMessage);
 
 		var client_q = getQueueContent();
 		//console.log("BROADCAST CASE : buffer B4 update : " + getBufferContent() );
@@ -225,7 +227,7 @@ function updateClientBuf(textSent)
 		//console.log("Updated buffer. New buffer : " + getBufferContent()  );
 		var numOfQueueElements = getNumberOfElementsInQueue();
 	 	if(numOfQueueElements > 0) {
-			console.log("Coming inside the if block !");
+			//console.log("Coming inside the if block !");
 
 		   	for(i=0;i<numOfQueueElements;i++) {
 				var qtuple = queue[i].split(",");
@@ -265,13 +267,13 @@ function updateClientBuf(textSent)
 	 	}  
 
 		var cursorPosition = getCursorPosition();
-		console.log("Beginning pos : "+ cursorPosition + " , position in msg : "+ positionInMessage);
+		//console.log("Beginning pos : "+ cursorPosition + " , position in msg : "+ positionInMessage);
 		if(cursorPosition > positionInMessage && charInMessage !=BACKSPACE && charInMessage!=DELETE )
 			cursorPosition++;
 		else if(cursorPosition > positionInMessage && ( charInMessage == BACKSPACE || charInMessage==DELETE ))
 			cursorPosition--;
 		setCursorPosition(cursorPosition);
-		console.log("Changed pos : "+ cursorPosition);
+		//console.log("Changed pos : "+ cursorPosition);
 	}
 }
 

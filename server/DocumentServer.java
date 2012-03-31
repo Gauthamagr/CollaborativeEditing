@@ -50,7 +50,7 @@ public class DocumentServer {
 					input_char_seq[j] = (char) input_stream.read();
 				}
 				String client_string = new String(input_char_seq);
-				System.out.println( "Intial connection url : " + client_string );
+				//System.out.println( "Intial connection url : " + client_string );
 				if(client_string.indexOf("server.html") > 0)
 					html_sent++;
 			}catch(IOException io){
