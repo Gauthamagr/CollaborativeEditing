@@ -7,6 +7,7 @@ public class DocumentServer {
 	int number_of_clients;
 	final int SERVER_PORT=5000;
     ServerSocket Server = null;
+	int html_sent=0;
 
 	//This is required to send the entire Html
 	public void establishInitialConnection() throws FileNotFoundException , IOException{
@@ -32,6 +33,30 @@ public class DocumentServer {
 		}
 
         Socket connection = Server.accept();
+
+
+			try{
+				InputStream input_stream= connection.getInputStream();
+				int num_of_chars = input_stream.available();
+               	try{
+               		Thread.currentThread().sleep(200);
+               	}catch(InterruptedException e){
+                  	System.out.println("NOT able to sleep :( :( :( ");
+               	}
+               	num_of_chars = input_stream.available();
+				//System.out.println("Inside while loop");
+				char input_char_seq[] = new char[num_of_chars];
+				for(int j =0;j<input_stream.available() ; j++){
+					input_char_seq[j] = (char) input_stream.read();
+				}
+				String client_string = new String(input_char_seq);
+				System.out.println( "Intial connection url : " + client_string );
+				if(client_string.indexOf("server.html") > 0)
+					html_sent++;
+			}catch(IOException io){
+			}
+
+
 		connection.setSoLinger(false, 0);
 		PrintWriter outToClient = new PrintWriter(connection.getOutputStream(),true);
 		String header="HTTP/1.1: 200 OK\r\n"+"Content-Type: text/html\r\n" + "\r\n";
@@ -46,6 +71,9 @@ public class DocumentServer {
 
 		System.out.println("Sent the html ");
 		Server.close();
+
+
+
 		return;
 	}
 
@@ -60,7 +88,7 @@ public class DocumentServer {
 
 		//!!!!!!!!!!! REMOVE -1 !!!!!!!!!!!!
 		int num_of_threads =0;
-		for(int i =0;i< 2*this.number_of_clients  ;i++){
+		for(int i =0;i< 4*this.number_of_clients  ;i++){
 			if(num_of_threads == this.number_of_clients)
 				break;
 
@@ -89,7 +117,7 @@ public class DocumentServer {
 				}
 				String client_string = new String(input_char_seq);
 				//System.out.println( "Persistent connection url : " + client_string );
-				if(client_string.indexOf("PERSISTENTCONNECTION") < 0)
+				if(client_string.indexOf("PERSISTENTCONNECTION") < 0 || client_string.indexOf("favicon.ico") > 0 )
 					continue;
 			}catch(IOException io){
 			}
@@ -130,9 +158,11 @@ public class DocumentServer {
 	public void startServer(){
 		
 		//Send Html for all the clients
-		for(int i = 0;i<this.number_of_clients;i++){
+		for(int i = 0;i< 4*this.number_of_clients;i++){
 			try{
 				establishInitialConnection();
+				if(html_sent==this.number_of_clients)
+					break;
 			}catch(FileNotFoundException e){
 				System.out.println("Cannot establish initial connection. FileNotFoundException");
 			}catch(IOException e){
