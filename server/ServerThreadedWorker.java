@@ -288,7 +288,12 @@ public class ServerThreadedWorker implements  Runnable{
 				op = queue.take();			
 			}catch(InterruptedException e){
 			}
+			
 			ack_broadcast = handler.InsertDataIntoServerStore(op);
+
+
+			if(ack_broadcast.getOriginal_client_version_number()==-1)
+				break;
 			for(int i=0;i<num_of_clients;i++){
 				try {
 					ack_broadcast_queue.put(ack_broadcast);

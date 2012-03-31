@@ -40,6 +40,7 @@ public class DataHandler {
 		history_element.setClient_id(in_packet.getClient_id());
 		history_element.setPosition(in_packet.getPosition());
 		history_element.setVersion_number(server_version_number);
+		history_element.setClient_version_number(in_packet.getClient_version_number());
 		
 		history_queue.add(history_element);
 	}
@@ -63,6 +64,13 @@ public class DataHandler {
 			else if (in_packet.getBuffer_version_number()<server_version_number){
 								
 				for(int i=0;i<history_queue.size();i++){
+					if (history_queue.elementAt(i).getClient_version_number()==in_packet.getClient_version_number() && history_queue.elementAt(i).getClient_id()==in_packet.getClient_id()){
+						 ack_broadcast = new AckBroadcast('0', 0, 0, -1, 0);						 
+						 return ack_broadcast;
+
+					}
+						
+					
 					if (history_queue.elementAt(i).getVersion_number()>in_packet.getBuffer_version_number()){
 						if(history_queue.elementAt(i).getClient_id()!=in_packet.getClient_id() 
 								&& history_queue.elementAt(i).getPosition()<=in_packet.getPosition())
