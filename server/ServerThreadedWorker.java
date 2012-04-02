@@ -293,7 +293,7 @@ public class ServerThreadedWorker implements  Runnable{
 
 
 			if(ack_broadcast.getOriginal_client_version_number()==-1)
-				break;
+				continue;
 			for(int i=0;i<num_of_clients;i++){
 				try {
 					ack_broadcast_queue.put(ack_broadcast);
